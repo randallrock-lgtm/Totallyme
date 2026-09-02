@@ -1,95 +1,1547 @@
 <!doctype html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Zombie Survivor Online</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style>
-    html,body{margin:0;height:100%;background:#111;color:white;font-family:Arial,sans-serif}
-    #game{display:block;margin:auto;background:#191919;width:min(100vw,1100px);height:auto}
-    #ui{position:fixed;top:12px;left:12px;background:#000b;padding:12px;border-radius:10px}
-    input,button{padding:9px;margin:3px;border-radius:7px;border:0}
-    button{cursor:pointer}
-    #status{margin-top:7px;font-size:14px}
-  </style>
+<meta charset="utf-8">
+<title>Zombie Survivor: Chaos Edition</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#070a0f;color:#eef2f7;font-family:Arial,sans-serif;overflow:hidden}
+#wrap{position:relative;width:100vw;height:100vh;display:grid;place-items:center}
+canvas{width:min(100vw,1100px);height:min(100vh,700px);border:2px solid #273040;box-shadow:0 0 50px #000;background:#111722};image-rendering:auto
+#hud{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:min(1060px,94vw);display:flex;gap:10px;pointer-events:none}
+.panel{background:rgba(8,12,18,.86);border:1px solid #303b4e;border-radius:12px;padding:9px 13px;min-width:150px;backdrop-filter:blur(6px)}
+.label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#8e9aae}.value{font-weight:bold;font-size:18px}
+#healthbar{height:10px;background:#252b36;border-radius:10px;overflow:hidden;margin-top:5px}.healthfill{height:100%;background:#5ee67b;width:100%;transition:.1s}
+#message{position:absolute;top:100px;left:50%;transform:translateX(-50%);font-size:34px;font-weight:900;letter-spacing:3px;text-shadow:0 4px 20px #000;opacity:0;transition:.15s;pointer-events:none}
+#newZombie{position:absolute;top:76px;right:16px;left:auto;transform:translateY(-6px);width:300px;display:flex;align-items:center;gap:9px;padding:7px 9px;border:1px solid #3d485a;border-radius:10px;background:rgba(8,12,18,.86);box-shadow:0 10px 28px #0008;opacity:0;pointer-events:none;transition:.18s;z-index:20}
+#newZombie.show{opacity:1;transform:translateY(0)}
+#zPreview{width:48px;height:48px;flex:0 0 48px;border-radius:8px;background:#0d131d;border:1px solid #303b4d}
+#newZombie .nzTitle{font-size:8px;letter-spacing:1.4px;text-transform:uppercase;color:#ffd34f;font-weight:900}
+#newZombie .nzName{font-size:15px;font-weight:900;margin:1px 0 2px}.nzDesc{font-size:10px;color:#aeb8c6;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nzStats{font-size:9px;color:#718096;margin-top:3px}
+#hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:12px;color:#aab4c4;background:#090d14cc;padding:7px 12px;border-radius:20px}
+#start,#codex,#gameover,#cards{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.78);backdrop-filter:blur(5px)}
+.hidden{display:none!important}.box{width:min(760px,92vw);max-height:90vh;overflow:auto;background:linear-gradient(145deg,#141b26,#0c1119);border:1px solid #354257;border-radius:20px;padding:28px;box-shadow:0 25px 80px #000}
+h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}button{border:0;border-radius:10px;padding:12px 18px;font-weight:800;cursor:pointer;background:#5ee67b;color:#07100a}button.alt{background:#263247;color:#fff}
+#cards{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding:35px;perspective:900px}
+.card{--rx:0deg;--ry:0deg;--mx:50%;--my:50%;transform-style:preserve-3d;transform:translateY(0) rotateX(var(--rx)) rotateY(var(--ry));will-change:transform}
+.card:hover{transform:translateY(-14px) rotateX(var(--rx)) rotateY(var(--ry)) scale(1.025);}
+.card:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--mx) var(--my),rgba(255,255,255,.24),transparent 30%);opacity:0;transition:opacity .15s;pointer-events:none;mix-blend-mode:screen}.card:hover:after{opacity:1}
+.card .icon,.card h2,.card p,.card small,.card .rarity{transform:translateZ(22px)}
+#cards.show{display:grid}.card{min-height:330px;border:1px solid #47536a;border-radius:20px;padding:22px;cursor:pointer;position:relative;overflow:hidden;background:radial-gradient(circle at 80% 10%,#273650,#111722 55%);transition:.18s;box-shadow:0 15px 40px #0008}
+.card:hover{border-color:#fff;box-shadow:0 30px 65px #000}
+.card:before{content:"";position:absolute;inset:-50%;background:conic-gradient(from 0deg,transparent,rgba(255,255,255,.08),transparent 20%);animation:spin 5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}.card>*{position:relative}.card .rarity{text-transform:uppercase;font-size:11px;letter-spacing:2px;color:#aeb8c8}.icon{font-size:54px;margin:16px 0}.card h2{margin:0 0 10px}.card p{color:#b7c1cf;line-height:1.45}.card small{display:block;margin-top:20px;color:#fff8;font-weight:bold}
+.common{box-shadow:0 15px 45px #6c7a8b22}.rare{border-color:#4bbcff}.epic{border-color:#c76bff}.legendary{border-color:#ffd34f}
+#codex .box{max-width:1000px}#zlist{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.zitem{padding:12px;border:1px solid #303b4d;border-radius:12px;background:#0c121b}.zname{font-weight:900}.zdesc{font-size:12px;color:#aeb8c6;margin-top:5px}.pill{display:inline-block;padding:2px 7px;border-radius:10px;background:#202b3b;font-size:10px;margin-top:7px}
+#gameover{display:none}.over{text-align:center}.over h2{font-size:58px;margin:0 0 10px;color:#ff6470}#customize{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.82);backdrop-filter:blur(5px);z-index:40}.modalHidden{display:none!important}.customizeBox{width:min(820px,94vw)}#customParts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.previewWrap{margin-top:16px;border:1px solid #303b4d;border-radius:16px;background:radial-gradient(circle at 50% 35%,#202d42,#080c12 72%);padding:12px;text-align:center}.previewTitle{font-size:12px;font-weight:900;letter-spacing:2px;color:#8eeaff;margin-bottom:4px}.previewWrap canvas{width:360px;max-width:100%;height:auto;border:1px solid #334057;border-radius:12px;background:transparent;display:block;margin:auto}.previewHint{font-size:11px;color:#8793a5;margin-top:5px}.partControl{padding:12px;border:1px solid #303b4d;border-radius:12px;background:#0c121b}.partHead{display:flex;justify-content:space-between;align-items:center;font-weight:900;margin-bottom:8px}.swatch{width:18px;height:18px;border-radius:50%;border:1px solid #fff5;display:inline-block}.rangeRow{display:grid;grid-template-columns:80px 1fr 42px;gap:8px;align-items:center;margin:5px 0;font-size:11px;color:#aeb8c6}.rangeRow input{width:100%}@media(max-width:800px){#customParts{grid-template-columns:1fr}}
+
+@media(max-width:800px){#cards{grid-template-columns:1fr;padding:20px;overflow:auto}.card{min-height:220px}#zlist{grid-template-columns:1fr 1fr}.panel{min-width:0}h1{font-size:36px}}
+#onlinePanel{position:absolute;top:14px;right:14px;z-index:50;background:rgba(8,12,18,.94);border:1px solid #354257;border-radius:14px;padding:12px;width:290px;box-shadow:0 12px 35px #0008}
+#onlinePanel h3{margin:0 0 7px;font-size:14px}.onlineRow{display:flex;gap:6px;margin-top:7px}.onlineRow input{flex:1;min-width:0;background:#111722;color:#fff;border:1px solid #354257;border-radius:8px;padding:9px}.onlineRow button{padding:9px 10px}.onlineStatus{font-size:11px;color:#aeb8c6;margin-top:7px;line-height:1.3}.onlineCode{font-weight:900;color:#8eeaff;letter-spacing:2px}
+.otherPlayerName{font-size:10px}
+@media(max-width:800px){#onlinePanel{top:auto;bottom:45px;right:8px;width:260px}}
+</style>
+<script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
+<div id="wrap">
 <canvas id="game" width="1100" height="700"></canvas>
-<div id="ui">
-  <button id="create">CREATE ROOM</button>
-  <input id="room" maxlength="8" placeholder="Room code">
-  <button id="join">JOIN ROOM</button>
-  <div id="status">Not connected</div>
+
+<div id="hud">
+ <div class="panel"><div class="label">Health</div><div class="value" id="healthText">100 / 100</div><div id="healthbar"><div class="healthfill" id="healthfill"></div></div></div>
+ <div class="panel"><div class="label">Wave</div><div class="value" id="wave">1</div><div id="kills">Kills: 0</div></div>
+ <div class="panel"><div class="label">Build</div><div id="build">DMG 2 · Reload .30s</div></div>
 </div>
-<script src="/socket.io/socket.io.js"></script>
+<div id="message"></div>
+<div id="newZombie"><canvas id="zPreview" width="82" height="82"></canvas><div><div class="nzTitle">NEW ENEMY DISCOVERED</div><div class="nzName" id="nzName"></div><div class="nzDesc" id="nzDesc"></div><div class="nzStats" id="nzStats"></div></div></div>
+<div id="hint">WASD / Arrow Keys move · Mouse aim · Hold SPACE or click to fire · ESC opens Codex</div>
+<div id="onlinePanel">
+  <h3>🌐 ONLINE CO-OP</h3>
+  <div class="onlineRow"><button id="createRoomBtn">CREATE ROOM</button></div>
+  <div class="onlineRow"><input id="roomInput" maxlength="8" placeholder="Room code"><button id="joinRoomBtn">JOIN</button></div>
+  <div class="onlineStatus" id="onlineStatus">Connecting to online server...</div>
+</div>
+
+<div id="start"><div class="box">
+<h1>☣ ZOMBIE SURVIVOR</h1><div class="sub">CHAOS EDITION — every run is different.</div>
+<p>Survive escalating waves, choose <b>1 of 3 random upgrades</b> after every wave, and learn enemy types in the Zombie Codex, including multiple deadly bosses and the Verity boss.</p>
+<div class="buttons"><button id="startBtn">START RUN</button><button class="alt" id="customizeBtn">🎨 CUSTOMIZE</button><button class="alt" id="codexBtn">ZOMBIE CODEX</button></div>
+</div></div>
+
+<div id="cards"><div class="card" id="c1"></div><div class="card" id="c2"></div><div class="card" id="c3"></div></div>
+
+<div id="customize" class="modalHidden"><div class="box customizeBox"><h2>🎨 Character Customization</h2><div class="sub">See the actual player sprites together while you customize every part.</div><div class="previewWrap"><div class="previewTitle">LIVE CHARACTER PREVIEW</div><canvas id="customPreview" width="360" height="300"></canvas><div class="previewHint">Your real in-game sprites are used here.</div></div><div id="customParts"></div><div class="buttons"><button id="resetColors" class="alt">RESET COLORS</button><button id="closeCustomize">DONE</button></div></div></div>
+
+<div id="codex"><div class="box"><h2>🧟 Zombie Codex</h2><div class="sub">Every enemy has its own behavior. New types become more common as waves rise.</div><div id="zlist"></div><div class="buttons"><button class="alt" id="closeCodex">CLOSE</button></div></div></div>
+
+<div id="gameover"><div class="box over"><h2>YOU DIED</h2><div id="finalStats"></div><div class="buttons" style="justify-content:center"><button id="restart">RUN IT BACK</button><button class="alt" id="goMenu">MENU</button></div></div></div>
+</div>
+
 <script>
-const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
-const status=document.getElementById("status");
-const SERVER_URL=location.origin;
-const socket=io(SERVER_URL,{transports:["websocket","polling"]});
-let myId=null, roomCode=null;
-const players={};
-
-socket.on("connect",()=>{myId=socket.id;status.textContent="Connected — create or join a room";});
-socket.on("connect_error",()=>status.textContent="Could not connect to server");
-socket.on("roomCreated",c=>{roomCode=c;status.textContent="Room: "+c+" — send this code to a friend";});
-socket.on("joinedRoom",c=>{roomCode=c;status.textContent="Joined room: "+c;});
-socket.on("roomError",m=>status.textContent=m);
-socket.on("state",state=>{
-  for(const id in players) delete players[id];
-  Object.assign(players,state.players);
-  draw(state);
-});
-
-document.getElementById("create").onclick=()=>socket.emit("createRoom");
-document.getElementById("join").onclick=()=>socket.emit("joinRoom",document.getElementById("room").value.trim().toUpperCase());
-
-const keys={};
-addEventListener("keydown",e=>keys[e.key.toLowerCase()]=true);
-addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
-
-let mouse={x:550,y:350,down:false};
-canvas.addEventListener("mousemove",e=>{
-  const r=canvas.getBoundingClientRect();
-  mouse.x=(e.clientX-r.left)*canvas.width/r.width;
-  mouse.y=(e.clientY-r.top)*canvas.height/r.height;
-});
-canvas.addEventListener("mousedown",()=>mouse.down=true);
-addEventListener("mouseup",()=>mouse.down=false);
-
-setInterval(()=>{
-  if(!roomCode)return;
-  let dx=(keys.d?1:0)-(keys.a?1:0),dy=(keys.s?1:0)-(keys.w?1:0);
-  const len=Math.hypot(dx,dy)||1;if(dx||dy){dx/=len;dy/=len;}
-  socket.emit("input",{dx,dy,aim:Math.atan2(mouse.y-350,mouse.x-550),shoot:mouse.down});
-},50);
-
-function draw(state){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle="#202020";ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle="#292929";
-  for(let x=0;x<1100;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,700);ctx.stroke();}
-  for(let y=0;y<700;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(1100,y);ctx.stroke();}
-
-  for(const z of state.zombies){
-    ctx.fillStyle="#55b84a";ctx.beginPath();ctx.arc(z.x,z.y,16,0,Math.PI*2);ctx.fill();
-  }
-  for(const b of state.bullets){
-    ctx.fillStyle="#ffd84a";ctx.beginPath();ctx.arc(b.x,b.y,4,0,Math.PI*2);ctx.fill();
-  }
-  for(const [id,p] of Object.entries(state.players)){
-    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);
-    ctx.fillStyle=id===myId?"#42a5ff":"#ff66cc";
-    ctx.fillRect(-15,-15,30,30);
-    ctx.fillStyle="#ddd";ctx.fillRect(7,-3,22,6);
-    ctx.restore();
-    ctx.fillStyle="white";ctx.fillText(id===myId?"YOU":"PLAYER",p.x-24,p.y-24);
-    ctx.fillStyle="#222";ctx.fillRect(p.x-25,p.y+22,50,6);
-    ctx.fillStyle="#45e060";ctx.fillRect(p.x-25,p.y+22,50*Math.max(0,p.hp/p.maxHp),6);
-  }
-  ctx.fillStyle="white";ctx.font="20px Arial";
-  ctx.fillText("Wave "+state.wave+"   Players: "+Object.keys(state.players).length,20,680);
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+// Internet multiplayer: the existing game remains the game; this layer shares players over Socket.IO.
+const socket=typeof io==='function'?io():null;
+let onlineRoom='',onlineConnected=false,otherPlayers={};
+const onlineStatusEl=document.getElementById('onlineStatus');
+function onlineStatus(msg){if(onlineStatusEl)onlineStatusEl.innerHTML=msg}
+if(socket){
+ socket.on('connect',()=>{onlineConnected=true;onlineStatus('🟢 Connected to the online server. Create or join a room.')});
+ socket.on('disconnect',()=>{onlineConnected=false;onlineStatus('🔴 Disconnected from server.')});
+ socket.on('connect_error',()=>onlineStatus('🔴 Could not connect to the server.'));
+ socket.on('roomCreated',code=>{onlineRoom=code;onlineStatus('Room created: <span class="onlineCode">'+code+'</span><br>Send this code to your friend.')});
+ socket.on('joinedRoom',code=>{onlineRoom=code;onlineStatus('🟢 Joined room: <span class="onlineCode">'+code+'</span>')});
+ socket.on('roomError',msg=>onlineStatus('⚠️ '+msg));
+ socket.on('roomPlayers',players=>{otherPlayers=players||{}});
 }
+function sendOnlineState(){
+ if(!socket||!onlineRoom||!player)return;
+ socket.emit('playerState',{x:player.x,y:player.y,angle:Math.atan2(mouse.y-player.y,mouse.x-player.x),hp:player.hp,maxHp:player.maxHp,alive:player.hp>0});
+}
+setInterval(sendOnlineState,50);
+
+document.getElementById('createRoomBtn').onclick=()=>{if(socket)socket.emit('createRoom')};
+document.getElementById('joinRoomBtn').onclick=()=>{if(socket)socket.emit('joinRoom',document.getElementById('roomInput').value.trim().toUpperCase())};
+
+// Verity boss artwork (embedded so the game stays a single self-contained HTML file).
+const verityImg=new Image();
+verityImg.src='data:image/png;base64,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';
+const legL=new Image(); legL.src='data:image/png;base64,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';
+const legR=new Image(); legR.src='data:image/png;base64,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';
+const handL=new Image(); handL.src='data:image/png;base64,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';
+const torsoImg=new Image(); torsoImg.src='data:image/png;base64,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';
+const headImg=new Image(); headImg.src='data:image/png;base64,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';
+const lowHeadImg=new Image(); lowHeadImg.src='data:image/png;base64,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';
+const gunHandImg=new Image(); gunHandImg.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGYAAABQCAYAAADr/ADSAAADpElEQVR4AeyZAXbjIAxEk73/nbv5jnEJFRgIYIHV14ltEGKkH5r29d9jzNfPaxtJr2H7ljoggaGBUmztWCofc6g297LrAENjfFGs/xzeM99abo/WeafNB5hnoXvXRHdNLScmNR/OEY/C8ds9A+bbommkL5ePMXdfev1mbeleKuMdmNJTkyqGpqJUTM4cOVBO7HIxDozmwm4JxwfT8tS0Bg0c1Dqv2nw+GLUmPWO3gROC0XxqHB/gIPe85PUNZs7SgIPmdH/iWgIzw6nxywIO8semv5fAzFoUcJxmreHwHQMz26k5CtpvHCDpuofovsTA6Hb9nTtgfZdhwOoUmNlPTax9U9SVAhMrbPZxTowvlfWkwGBepenGpqjTV+P0deliYDBal3H+VdTu65KKJDCYusSM0k3ph6Sudn0wXTdaMLkEKzZWXH4IhsTFSWzBaQeK+xqCOd3BAqo7UATHwFT3uWohcGL6SGhgPtpx6YMDtpkwMFsbVL0A6GFgVDE5zPwYmKMXum4MjC4ehxsDc7RC100I5vnQ5e+2bkIw228Et+2GosJDMIqs3drK08Ao5W9g9IHZ/vVtYPSB2RwZmK0Nal6204KbEMwxwaRpaAc+eh+CGepk8c1otFOqVDFGAkNgKpHNlXdA6iljSMwmgSEwuoBJ02kHpP4x5iuZJAaGRSThairrQJO+pcBgp8kmJKoU+yN/Oc+SpBh/bMQ9vprscwaGTZptRrJK4cGpJIVbI11L8pzFuvxncdnzOWCykzUOpNjGKT/SkT+lj+DIg1sfma4fzgWDgfpd5lxJzWfqVlkuGAxgkuso8S+IUKP2vnyfEjCXm30ZANTrsv73bGBGn9rL3gFawQBA0mWNGr1xGsxoN+/9APK+u/GrRjA3xvFbegmYER+8dlp2NiVg9iXdLq2gtMrTrdCcxJrA5PiNxYw4zbG9u4yvAqZLc65MamCu7H5ib01g+HGEEnbFKX/NEp8vVKkJDH6Q32ieUyqJTeVRN6cRTG6TQijLnBYakAOGuNEKmx7ufzYfxk/3rBUMjaT5MTHva6nTQmGaweAvR8tBoeiZwQAEUcdy0giGZudoORh+QRrB+P5ue29glKI3MAZGaQeU2io5MXwgKy1jPVv5YB4P/thbrwNKKyoBo7SENW0ZGKVctYGxz7H9jaINzG7LLgZG6XugBEzvHzO98ytFINsqASNnsNEuHSgFY+/qLhj+Ji0FQwbgOPHcQuRrkWeZHP8BAAD//ylGqX4AAAAGSURBVAMAZU2Ej+AwsTIAAAAASUVORK5CYII=';
+const handR=new Image(); handR.src='data:image/png;base64,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';
+const W=1100,H=700,keys={},mouse={x:W/2,y:H/2,down:false};
+let running=false,paused=false,gameOver=false,last=0,wave=1,kills=0,spawnTimer=0,waveCleared=false;
+let zombies=[],bullets=[],enemyBullets=[],particles=[],effects=[],texts=[],upgradeHistory=[];let gameTime=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a),dist=(a,b,c,d)=>Math.hypot(a-c,b-d);
+function say(s){const e=document.getElementById('message');e.textContent=s;e.style.opacity=1;clearTimeout(say.t);say.t=setTimeout(()=>e.style.opacity=0,850)}
+const discoveredZombies=new Set();
+const zombieNoticeQueue=[];let zombieNoticeBusy=false;
+function queueZombieDiscovery(t){
+ const key=t[2];
+ if(discoveredZombies.has(key))return;
+ discoveredZombies.add(key);
+ zombieNoticeQueue.push(t);
+ processZombieDiscoveryQueue();
+}
+function drawZombiePreview(t){
+ const c=document.getElementById('zPreview'),p=c.getContext('2d'),name=t[0],kind=t[2],col=t[6];
+ p.clearRect(0,0,c.width,c.height);p.fillStyle='#0d131d';p.fillRect(0,0,c.width,c.height);
+ const cx=41,cy=43,r=27;
+ if(kind==='verity'){
+   if(verityImg.complete)p.drawImage(verityImg,10,10,62,60);
+   return;
+ }
+ p.save();p.translate(cx,cy);p.fillStyle=col;
+ if(kind==='verityMinion'){
+   p.beginPath();p.moveTo(0,-27);p.lineTo(23,0);p.lineTo(0,27);p.lineTo(-23,0);p.closePath();p.fill();
+   p.fillStyle='#fff';p.fillRect(-3,-15,6,30);p.restore();return;
+ }
+ if(kind==='doubtling'){
+   p.beginPath();p.arc(0,0,24,0,Math.PI*2);p.fill();p.fillStyle='#263342';p.fillRect(-30,-4,12,8);p.fillStyle='#d8ff68';p.beginPath();p.arc(0,-30,5,0,Math.PI*2);p.fill();p.restore();return;
+ }
+ if(kind==='dreadnought'){p.fillStyle=col;p.fillRect(-27,-22,54,44);p.fillStyle='#ffb04d';p.fillRect(-22,-3,44,7);p.strokeStyle='#e7a46d';p.lineWidth=6;p.beginPath();p.moveTo(-27,0);p.lineTo(-38,0);p.moveTo(27,0);p.lineTo(38,0);p.stroke();p.restore();return;}
+ if(kind==='riftQueen'){p.fillStyle=col;p.beginPath();p.arc(0,0,22,0,Math.PI*2);p.fill();p.strokeStyle='#d9b5ff';p.lineWidth=4;p.beginPath();p.arc(0,0,31,0,Math.PI*2);p.stroke();p.restore();return;}
+ if(kind==='boneColossus'){p.fillStyle=col;p.fillRect(-24,-23,48,46);p.strokeStyle='#f4e7bd';p.lineWidth=6;p.beginPath();p.moveTo(-20,-6);p.lineTo(20,-6);p.moveTo(-16,12);p.lineTo(16,12);p.stroke();p.restore();return;}
+ if(kind==='chronoTyrant'){p.fillStyle=col;p.beginPath();p.arc(0,0,23,0,Math.PI*2);p.fill();p.strokeStyle='#f1d8ff';p.lineWidth=4;p.beginPath();p.arc(0,0,32,0,Math.PI*2);p.stroke();p.restore();return;}
+ if(kind==='swarmMother'){p.fillStyle=col;p.beginPath();p.ellipse(0,0,28,21,0,0,Math.PI*2);p.fill();p.fillStyle='#efffc0';for(let i=0;i<4;i++){p.beginPath();p.arc(-15+i*10,0,4,0,Math.PI*2);p.fill();}p.restore();return;}
+ if(isBossKind(kind)){
+   p.beginPath();p.arc(0,0,r,0,Math.PI*2);p.fill();p.fillStyle='#4b111d';p.beginPath();p.moveTo(-15,-8);p.lineTo(-29,-28);p.lineTo(-7,-19);p.closePath();p.fill();p.beginPath();p.moveTo(15,-8);p.lineTo(29,-28);p.lineTo(7,-19);p.closePath();p.fill();p.restore();return;
+ }
+ if(kind==='tank'||kind==='juggernaut'||kind==='acidTank'){
+   p.fillRect(-23,-20,46,42);p.fillStyle='#26303b';p.fillRect(-16,-10,32,8);p.fillStyle='#d9d2bd';p.beginPath();p.arc(0,-18,12,0,Math.PI*2);p.fill();p.restore();return;
+ }
+ if(kind==='void'){
+   p.fillStyle='#1a0928';p.beginPath();p.arc(0,0,r,0,Math.PI*2);p.fill();p.strokeStyle='#9c5cff';p.lineWidth=4;p.beginPath();p.arc(0,0,34,0,Math.PI*2);p.stroke();p.fillStyle='#050008';p.beginPath();p.arc(0,0,13,0,Math.PI*2);p.fill();p.restore();return;
+ }
+ // Generic zombie silhouette for the remaining enemy types, using the actual enemy color.
+ p.strokeStyle='#111722';p.lineWidth=7;p.lineCap='round';p.beginPath();p.moveTo(-15,8);p.lineTo(-28,25);p.moveTo(15,8);p.lineTo(28,25);p.moveTo(-18,0);p.lineTo(-30,8);p.moveTo(18,0);p.lineTo(30,8);p.stroke();
+ p.fillStyle=col;p.beginPath();p.ellipse(0,9,21,24,0,0,Math.PI*2);p.fill();p.fillStyle='#d9d2bd';p.beginPath();p.arc(0,-17,17,0,Math.PI*2);p.fill();
+ p.fillStyle='#202733';p.fillRect(-8,-19,5,4);p.fillRect(3,-19,5,4);p.restore();
+}
+function processZombieDiscoveryQueue(){
+ if(zombieNoticeBusy||!zombieNoticeQueue.length)return;
+ zombieNoticeBusy=true;
+ const t=zombieNoticeQueue.shift();
+ document.getElementById('nzName').textContent=t[0];
+ document.getElementById('nzDesc').textContent=t[1];
+ document.getElementById('nzStats').textContent=`HP ${t[3]}  •  SPEED ${t[4]}`;
+ drawZombiePreview(t);
+ const box=document.getElementById('newZombie');box.classList.add('show');
+ clearTimeout(processZombieDiscoveryQueue.t);
+ processZombieDiscoveryQueue.t=setTimeout(()=>{
+   box.classList.remove('show');
+   setTimeout(()=>{zombieNoticeBusy=false;processZombieDiscoveryQueue()},240);
+ },1800);
+}
+
+
+const player={
+ x:W/2,y:H/2,r:18,angle:0,speed:235,speedMult:1,lastShot:0,
+ hp:100,maxHp:100,damage:2,reload:.30,bulletSpeed:720,bulletSize:4,
+ shots:1,spread:.10,pierce:0,crit:.05,critMult:2,
+ armor:0,regen:0,healOnKill:0,lifeSteal:0,
+ damageTaken:1,moveMult:1,freeze:0,burn:0,explosive:0,explosionRadius:80,
+ chain:0,chainDamage:.5,homing:0,knockback:0,
+ dashChance:0,thorns:0,orbital:0,orbitDamage:14,orbitRange:52,
+ lightning:0,lightningTimer:1.5,meteor:0,meteorTimer:4,
+ nova:0,novaTimer:7,magnet:0,shield:0,shieldMax:0,shieldRegen:0,
+ luck:0,enemySlow:0,extraLife:0,berserk:0,rage:0,bulletLife:1.5,
+ shotgun:0,laser:0,poison:0,poisonTime:0,freezeNova:0,chronoSlow:1,chronoSlowTime:0,enemyPoisonStacks:0,enemyPoisonTime:0,webSlowTime:0,
+ xp:0,score:0,fireRate:0,damageBonus:0,anim:0,moveAnim:0,recoil:0,flash:0,damageFlash:0,moveAngle:0,aimAngle:0,stepPhase:0,walkSway:0,aimSpring:0,combo:0,comboTimer:0
+};
+
+const upgrades=[
+['Rapid Reload','Shoot 12% faster','⚡', 'reload', 'common'],['Heavy Rounds','+1 bullet damage','💥','damage','common'],['Adrenaline','+12% move speed','🏃','speed','common'],['Vitality','+20 max HP and heal 20','❤','health','common'],['Long Barrel','+15% bullet speed','➜','bulletSpeed','common'],['Bigger Caliber','Bullets +30% size','●','bulletSize','common'],['Steady Hands','-18% spread','🎯','spread','common'],['Iron Skin','Take 8% less damage','🛡','armor','common'],['Regrowth','Heal 1 HP/sec','✚','regen','common'],['Executioner','+25% damage to low-health zombies','☠','execute','common'],
+['Double Tap','10% chance to fire twice','✌','doubletap','common'],['Hot Mag','Bullets apply burn','🔥','burn','common'],['Cold Mag','Bullets slow enemies','❄','freeze','common'],['Lucky Charm','Better upgrade rarity','🍀','luck','common'],['Battle Boots','+8% speed and knockback','🥾','boots','common'],['Quick Trigger','-0.03s reload','⏱','reloadFlat','common'],['Hunter Eye','+5% crit chance','👁','crit','common'],['Kevlar','+10 max HP','🦺','health10','common'],['First Aid','Heal 12 HP now','🩹','heal','common'],['Thick Skull','Knockback resistance','🧠','resist','common'],
+['Twin Shot','Fire +1 projectile','🔱','shots','rare'],['Triple Shot','Fire +2 projectiles','🔱','shots2','rare'],['Piercing Rounds','+1 pierce','➤','pierce','rare'],['Critical Strike','+12% crit chance','🎯','crit12','rare'],['Blood Harvest','Heal 3 HP per kill','🩸','healKill','rare'],['Vampire Core','Heal 1.5% max HP per kill','🧛','vamp','rare'],['Combat Armor','Take 18% less damage','🛡','armor18','rare'],['Phase Dash','8% chance to dodge hits','💨','dodge','rare'],['Ricochet','Bullets can bounce once','↪','ricochet','rare'],['Homing Rounds','Bullets curve toward enemies','🧲','homing','rare'],
+['Chain Lightning','Hits can zap another enemy','⚡','chain','rare'],['Cryo Burst','Frozen enemies take +25% damage','❄','cryo','rare'],['Poison Ammo','Hits poison enemies','☣','poison','rare'],['Shock Ammo','Hits briefly stun enemies','🔋','shock','rare'],['Magnetic Field','Pull nearby zombies inward','🧲','magnet','rare'],['Emergency Shield','Gain a 25 HP shield','🔰','shield','rare'],['Berserker','+35% damage below 35% HP','😡','berserk','rare'],['Last Stand','+60% damage below 20% HP','💀','laststand','rare'],['Knockback Rounds','Bullets shove enemies','🌪','knockback','rare'],['Ammo Reserve','Bullets last 40% longer','📦','bulletLife','rare'],
+['Nuclear Rounds','18% chance to explode on hit','☢','nuclear','epic'],['Orbital Blades','Two damaging blades orbit you','🌀','orbit','epic'],['Thunder Core','Lightning strikes every 2 sec','🌩','lightning','epic'],['Meteor Core','Meteor hits a random area every 5 sec','☄','meteor','epic'],['Frost Nova','Periodically freeze nearby enemies','❄','nova','epic'],['Glass Cannon','+70% damage, -20 max HP','🔮','glass','epic'],['Death Mark','Marked enemies take +50% damage','☠','mark','epic'],['Bullet Storm','+25% fire rate','🌧','fireRate','epic'],['Soul Siphon','Kills give a small heal and speed burst','👻','soul','epic'],['Plasma Rounds','Bullets pierce +2 and glow','🟣','plasma','epic'],
+['Explosive Expert','Explosions +45% radius/damage','💣','explosion','epic'],['Chain Reactor','Chain lightning hits 2 more targets','🔌','chain2','epic'],['Inferno Ammo','Burn spreads on death','🔥','inferno','epic'],['Time Warp','All zombies move 12% slower','⏳','enemySlow','epic'],['Guardian Angel','+1 extra life','😇','life','epic'],['Reinforced Shield','Shield capacity +25','🔰','shield25','epic'],['Regen Matrix','+3 HP/sec','💚','regen3','epic'],['Execution Protocol','+75% damage to enemies under 20% HP','⚔','execute2','epic'],['Overclock','Reload speed +22% and bullet speed +20%','🚀','overclock','epic'],['Black Hole','Kills create a pull field','🕳','blackhole','epic'],
+['Chaos Engine','Every shot has a random bonus effect','🎲','chaos','legendary'],['Singularity','Shots have a chance to create a black hole','🕳','singularity','legendary'],['Death Ray','Every 7 sec fire a piercing laser','🔴','laser','legendary'],['Meteor Shower','Three meteors instead of one','☄','meteor3','legendary'],['Storm Bringer','Lightning can chain 4 times','🌩','storm','legendary'],['Vampire Lord','Triple all healing from kills','🧛','vamp3','legendary'],['Phoenix Protocol','Revive once at 40% HP','🔥','phoenix','legendary'],['Zero Point','Massively slow enemies near you','❄','zeropoint','legendary'],['Doom Bullets','+100% damage but -10% max HP','💀','doom','legendary'],['Reality Breaker','Every 20 kills triggers a screen-wide blast','🌌','reality','legendary']
+];
+
+// Add 50 more genuinely distinct upgrades so the pool is >100.
+const more=[
+['Glass Shards','Taking damage fires 8 shards outward','🔷','shards'],['Thorn Armor','Contact damage reflects damage','🌵','thorns'],['Rapid Recovery','After taking damage, heal 8 HP over 2 sec','💗','recovery'],['Adrenal Surge','Kills briefly increase movement speed','⚡','rageSpeed'],['Hunter Instinct','Damage +20% while no zombies are nearby','🐺','hunter'],['Crowd Killer','Damage +35% when 5+ zombies are nearby','👥','crowd'],['Close Quarters','Damage +45% at close range','🔫','close'],['Deadeye','Crits deal +1 extra multiplier','🎯','critMulti'],['Full Auto','Hold fire becomes slightly faster over time','🔄','auto'],['Drill Ammo','Each projectile gains +1 pierce every 10 kills','🛠','drill'],
+['Bouncing Core','Projectiles bounce off screen edges','🏀','bounce'],['Needle Rounds','Smaller bullets, +35% damage','📍','needle'],['Wide Barrel','+2 projectiles, +35% spread','🌊','wide'],['Focused Barrel','-40% spread, +15% damage','🔭','focus'],['Overpenetration','Pierce +3, bullet damage -10%','🪓','overpen'],['Pulse Shot','Every 6th shot emits a damage pulse','📡','pulse'],['Arc Shot','Every 5th shot arcs toward 3 enemies','〰','arc'],['Vortex Shot','Shots pull enemies slightly','🌀','vortex'],['Rage Engine','Damage rises 1% per 10 kills this wave','😈','rageEngine'],['Cold Blood','Frozen targets have a 20% chance to shatter','🧊','shatter'],
+['Toxic Cloud','Poisoned enemies leave a damage cloud','☁','toxicCloud'],['Burning Trail','Burning enemies leave fire behind','🔥','fireTrail'],['Electric Field','Nearby enemies take tiny periodic shocks','⚡','field'],['Acid Blood','Damaged enemies can spray acid on death','🧪','acidBlood'],['Zombie Bounty','Every 25 kills heal 15 HP','💰','bounty'],['Second Wind','Below 25% HP, move 30% faster','🌬','secondWind'],['Desperation','Below 15% HP, fire 50% faster','🚨','desperation'],['Fortress','Stand still for 2 sec to gain 25% damage reduction','🏰','fortress'],['Momentum','Moving continuously grants up to 25% damage','🏎','momentum'],['Vigilance','Enemies approaching from behind are slowed','👀','vigilance'],
+['Overcharge','Every 10th shot deals 5x damage','🔋','overcharge'],['Lucky Seven','Every 7th kill gives a random mini-heal','7️⃣','seven'],['Blood Rush','Kills briefly increase reload speed','🩸','bloodrush'],['Scrap Armor','Each 50 kills grants 1% damage reduction','🔩','scrap'],['Boss Hunter','Boss damage +80%','👑','boss'],['Minion Slayer','Damage +25% to small enemies','🗡','minion'],['Tank Buster','Damage +35% to large enemies','🧱','tankbuster'],['Fast Breaker','Damage +40% to fast enemies','🏹','fastbuster'],['Undead Scholar','Codex discoveries grant a tiny permanent boost','📖','scholar'],['Wave Runner','Damage +10% for first 20 sec of each wave','🏃','waveRunner'],
+['Clean Kill','Killing an enemy without taking damage for 8 sec heals 5','✨','clean'],['Adrenaline Shot','Max HP -10, speed +25%','💉','adrenaline'],['Juggernaut','Speed -12%, max HP +50','🦾','juggernaut'],['Miniaturize','Player size -15%, dodge chance +5%','🔬','mini'],['Colossus','Player size +20%, damage +20%','🗿','colossus'],['Lucky Bullets','5% chance for a shot to deal 4x damage','🍀','luckyshot'],['Chaos Reload','Reload time randomly shifts after each shot','🎰','chaosreload'],['Echo Shot','10% chance to repeat a shot after .12 sec','🔊','echo'],['Phantom Ammo','20% chance bullets pass through enemies without being consumed','👻','phantom'],['Final Hour','At wave 10+, damage +25%','⌛','finalhour']
+];
+for(const u of more)upgrades.push([u[0],u[1],u[2],u[3],'rare']);
+console.assert(upgrades.length>=100,'Upgrade pool too small');
+
+
+// 120 MORE upgrades: all are functional and individually selectable.
+const megaUpgrades=[
+["Neon Core 1","+18% weapon damage","\u26a1","mega0","common"],
+["Titan Scope 2","-12% reload time","\ud83d\udca5","mega1","common"],
+["Razor Harness 3","+15% move speed","\ud83c\udfaf","mega2","rare"],
+["Quantum Magazine 4","+7% critical chance","\ud83d\udee1","mega3","rare"],
+["Turbo Thruster 5","+25 max HP","\ud83d\udd25","mega4","rare"],
+["Inferno Emitter 6","+20% bullet speed","\u2744","mega5","epic"],
+["Frost Rounds 7","+25% bullet size","\ud83c\udf00","mega6","epic"],
+["Void Circuit 8","+2 pierce","\u2622","mega7","legendary"],
+["Solar Drive 9","+1 projectile","\ud83d\udd2e","mega8","common"],
+["Lunar Engine 10","Heal 5% max HP on kill","\ud83d\ude80","mega9","common"],
+["Arcane Catalyst 11","Gain a 30 HP shield","\ud83c\udf29","mega10","rare"],
+["Savage Lens 12","Slow enemies by 10%","\ud83d\udc7b","mega11","rare"],
+["Phantom Matrix 13","+18 knockback","\ud83d\udcab","mega12","rare"],
+["Pulse Chamber 14","Every 8th shot burns nearby enemies","\ud83e\uddea","mega13","epic"],
+["Omega Coil 15","Every 11th shot emits a pulse","\ud83d\udde1","mega14","epic"],
+["Hyper Protocol 16","+5% chance to dodge","\ud83d\udd0b","mega15","legendary"],
+["Prism Module 17","Regenerate 1 HP/sec","\ud83c\udf0c","mega16","common"],
+["Meteor Array 18","+55% damage to bosses","\ud83e\uddf2","mega17","common"],
+["Static Capacitor 19","+35% damage to fast enemies","\ud83d\udc8e","mega18","rare"],
+["Viral Reactor 20","+35% damage to armored enemies","\ud83d\udee0","mega19","rare"],
+["Gravity Core 21","+30% damage at close range","\u26a1","mega20","rare"],
+["Echo Scope 22","+25% damage at long range","\ud83d\udca5","mega21","epic"],
+["Nova Harness 23","+15% damage during the first 12 sec of each wave","\ud83c\udfaf","mega22","epic"],
+["Rift Magazine 24","Each consecutive kill adds 2% damage for 5 sec","\ud83d\udee1","mega23","legendary"],
+["Storm Thruster 25","Gain 1 orbiting blade","\ud83d\udd25","mega24","common"],
+["Chrome Emitter 26","Call a meteor every 5.9s","\u2744","mega25","common"],
+["Crimson Rounds 27","Lightning strike every 2.0s","\ud83c\udf00","mega26","rare"],
+["Apex Circuit 28","Release a freeze nova every 6.8s","\u2622","mega27","rare"],
+["Wild Drive 29","+20% homing strength","\ud83d\udd2e","mega28","rare"],
+["Flux Engine 30","+18% chance to explode on hit","\ud83d\ude80","mega29","epic"],
+["Neon Catalyst 31","Take 10% less damage","\ud83c\udf29","mega30","epic"],
+["Titan Lens 32","Pickup range +35","\ud83d\udc7b","mega31","legendary"],
+["Razor Matrix 33","Heal 60 HP immediately","\ud83d\udcab","mega32","common"],
+["Quantum Chamber 34","Critical hits deal +12% damage","\ud83e\uddea","mega33","common"],
+["Turbo Coil 35","+30% fire rate","\ud83d\udde1","mega34","rare"],
+["Inferno Protocol 36","Gain one extra life","\ud83d\udd0b","mega35","rare"],
+["Frost Module 37","Upgrade rarity luck increases","\ud83c\udf0c","mega36","rare"],
+["Void Array 38","Taking damage releases 4 shards","\ud83e\uddf2","mega37","epic"],
+["Solar Capacitor 39","Reflect 4% contact damage","\ud83d\udc8e","mega38","epic"],
+["Lunar Reactor 40","Kills heal 5 HP","\ud83d\udee0","mega39","legendary"],
+["Arcane Core 41","Bullet lifetime +18%","\u26a1","mega40","common"],
+["Savage Scope 42","+12% weapon damage","\ud83d\udca5","mega41","common"],
+["Phantom Harness 43","-15% reload time","\ud83c\udfaf","mega42","rare"],
+["Pulse Magazine 44","+7% move speed","\ud83d\udee1","mega43","rare"],
+["Omega Thruster 45","+25% critical chance","\ud83d\udd25","mega44","rare"],
+["Hyper Emitter 46","+20 max HP","\u2744","mega45","epic"],
+["Prism Rounds 47","+25% bullet speed","\ud83c\udf00","mega46","epic"],
+["Meteor Circuit 48","+12% bullet size","\u2622","mega47","legendary"],
+["Static Drive 49","+1 pierce","\ud83d\udd2e","mega48","common"],
+["Viral Engine 50","+1 projectile","\ud83d\ude80","mega49","common"],
+["Gravity Catalyst 51","Heal 30% max HP on kill","\ud83c\udf29","mega50","rare"],
+["Echo Lens 52","Gain a 10 HP shield","\ud83d\udc7b","mega51","rare"],
+["Nova Matrix 53","Slow enemies by 18%","\ud83d\udcab","mega52","rare"],
+["Rift Chamber 54","+20 knockback","\ud83e\uddea","mega53","epic"],
+["Storm Coil 55","Every 8th shot burns nearby enemies","\ud83d\udde1","mega54","epic"],
+["Chrome Protocol 56","Every 11th shot emits a pulse","\ud83d\udd0b","mega55","legendary"],
+["Crimson Module 57","+0% chance to dodge","\ud83c\udf0c","mega56","common"],
+["Apex Array 58","Regenerate 5 HP/sec","\ud83e\uddf2","mega57","common"],
+["Wild Capacitor 59","+35% damage to bosses","\ud83d\udc8e","mega58","rare"],
+["Flux Reactor 60","+35% damage to fast enemies","\ud83d\udee0","mega59","rare"],
+["Neon Core 61","+30% damage to armored enemies","\u26a1","mega60","rare"],
+["Titan Scope 62","+25% damage at close range","\ud83d\udca5","mega61","epic"],
+["Razor Harness 63","+15% damage at long range","\ud83c\udfaf","mega62","epic"],
+["Quantum Magazine 64","+12% damage during the first 12 sec of each wave","\ud83d\udee1","mega63","legendary"],
+["Turbo Thruster 65","Each consecutive kill adds 3% damage for 5 sec","\ud83d\udd25","mega64","common"],
+["Inferno Emitter 66","Gain 1 orbiting blade","\u2744","mega65","common"],
+["Frost Rounds 67","Call a meteor every 6.0s","\ud83c\udf00","mega66","rare"],
+["Void Circuit 68","Lightning strike every 1.8s","\u2622","mega67","rare"],
+["Solar Drive 69","Release a freeze nova every 7.0s","\ud83d\udd2e","mega68","rare"],
+["Lunar Engine 70","+18% homing strength","\ud83d\ude80","mega69","epic"],
+["Arcane Catalyst 71","+10% chance to explode on hit","\ud83c\udf29","mega70","epic"],
+["Savage Lens 72","Take 35% less damage","\ud83d\udc7b","mega71","legendary"],
+["Phantom Matrix 73","Pickup range +60","\ud83d\udcab","mega72","common"],
+["Pulse Chamber 74","Heal 12 HP immediately","\ud83e\uddea","mega73","common"],
+["Omega Coil 75","Critical hits deal +30% damage","\ud83d\udde1","mega74","rare"],
+["Hyper Protocol 76","+20% fire rate","\ud83d\udd0b","mega75","rare"],
+["Prism Module 77","Gain one extra life","\ud83c\udf0c","mega76","rare"],
+["Meteor Array 78","Upgrade rarity luck increases","\ud83e\uddf2","mega77","epic"],
+["Static Capacitor 79","Taking damage releases 5 shards","\ud83d\udc8e","mega78","epic"],
+["Viral Reactor 80","Reflect 20% contact damage","\ud83d\udee0","mega79","legendary"],
+["Gravity Core 81","Kills heal 4 HP","\u26a1","mega80","common"],
+["Echo Scope 82","Bullet lifetime +12%","\ud83d\udca5","mega81","common"],
+["Nova Harness 83","+15% weapon damage","\ud83c\udfaf","mega82","rare"],
+["Rift Magazine 84","-7% reload time","\ud83d\udee1","mega83","rare"],
+["Storm Thruster 85","+25% move speed","\ud83d\udd25","mega84","rare"],
+["Chrome Emitter 86","+20% critical chance","\u2744","mega85","epic"],
+["Crimson Rounds 87","+25 max HP","\ud83c\udf00","mega86","epic"],
+["Apex Circuit 88","+12% bullet speed","\u2622","mega87","legendary"],
+["Wild Drive 89","+10% bullet size","\ud83d\udd2e","mega88","common"],
+["Flux Engine 90","+1 pierce","\ud83d\ude80","mega89","common"],
+["Neon Catalyst 91","+2 projectile","\ud83c\udf29","mega90","rare"],
+["Titan Lens 92","Heal 10% max HP on kill","\ud83d\udc7b","mega91","rare"],
+["Razor Matrix 93","Gain a 18 HP shield","\ud83d\udcab","mega92","rare"],
+["Quantum Chamber 94","Slow enemies by 20%","\ud83e\uddea","mega93","epic"],
+["Turbo Coil 95","+20 knockback","\ud83d\udde1","mega94","epic"],
+["Inferno Protocol 96","Every 8th shot burns nearby enemies","\ud83d\udd0b","mega95","legendary"],
+["Frost Module 97","Every 14th shot emits a pulse","\ud83c\udf0c","mega96","common"],
+["Void Array 98","+13% chance to dodge","\ud83e\uddf2","mega97","common"],
+["Solar Capacitor 99","Regenerate 3 HP/sec","\ud83d\udc8e","mega98","rare"],
+["Lunar Reactor 100","+35% damage to bosses","\ud83d\udee0","mega99","rare"],
+["Arcane Core 101","+30% damage to fast enemies","\u26a1","mega100","rare"],
+["Savage Scope 102","+25% damage to armored enemies","\ud83d\udca5","mega101","epic"],
+["Phantom Harness 103","+15% damage at close range","\ud83c\udfaf","mega102","epic"],
+["Pulse Magazine 104","+12% damage at long range","\ud83d\udee1","mega103","legendary"],
+["Omega Thruster 105","+15% damage during the first 12 sec of each wave","\ud83d\udd25","mega104","common"],
+["Hyper Emitter 106","Each consecutive kill adds 4% damage for 5 sec","\u2744","mega105","common"],
+["Prism Rounds 107","Gain 1 orbiting blade","\ud83c\udf00","mega106","rare"],
+["Meteor Circuit 108","Call a meteor every 5.8s","\u2622","mega107","rare"],
+["Static Drive 109","Lightning strike every 2.0s","\ud83d\udd2e","mega108","rare"],
+["Viral Engine 110","Release a freeze nova every 7.1s","\ud83d\ude80","mega109","epic"],
+["Gravity Catalyst 111","+10% homing strength","\ud83c\udf29","mega110","epic"],
+["Echo Lens 112","+35% chance to explode on hit","\ud83d\udc7b","mega111","legendary"],
+["Nova Matrix 113","Take 60% less damage","\ud83d\udcab","mega112","common"],
+["Rift Chamber 114","Pickup range +12","\ud83e\uddea","mega113","common"],
+["Storm Coil 115","Heal 30 HP immediately","\ud83d\udde1","mega114","rare"],
+["Chrome Protocol 116","Critical hits deal +20% damage","\ud83d\udd0b","mega115","rare"],
+["Crimson Module 117","+1% fire rate","\ud83c\udf0c","mega116","rare"],
+["Apex Array 118","Gain one extra life","\ud83e\uddf2","mega117","epic"],
+["Wild Capacitor 119","Upgrade rarity luck increases","\ud83d\udc8e","mega118","epic"],
+["Flux Reactor 120","Taking damage releases 9 shards","\ud83d\udee0","mega119","legendary"]
+];
+for(const u of megaUpgrades)upgrades.push(u);
+
+const zombieTypes=[
+['Walker','Basic shambling zombie.','normal',5,70,18,'#66c86f'],
+['Runner','Very fast and fragile.','fast',3,135,14,'#f1bd55'],
+['Tank','Huge body with heavy contact damage.','tank',34,40,29,'#a34e5a'],
+['Ice','Leaves a freezing aura that slows you.','ice',10,62,20,'#48cbea'],
+['Shooter','Keeps distance and fires aimed projectiles.','shooter',8,48,19,'#9c68e8'],
+['Toxic','Poisons you when close.','toxic',9,68,20,'#59d33d'],
+['Bomber','Rushes you and explodes on death.','bomber',11,82,21,'#ff7438'],
+['Volt','Damages nearby zombies and shocks you.','volt',12,76,20,'#8c63ff'],
+['Spitter','Stops and spits acid globes.','spitter',10,48,19,'#91b92f'],
+['Burner','Leaves damaging fire behind.','burner',13,84,21,'#e85b31'],
+['Shieldbearer','Front shield blocks most bullets.','shield',20,50,23,'#71839a'],
+['Leaper','Periodically leaps toward you.','leaper',12,92,18,'#dc6a9b'],
+['Blinker','Teleports closer every few seconds.','blinker',10,70,17,'#7d8cff'],
+['Splitter','Splits into two smaller zombies on death.','splitter',16,57,22,'#d3a04e'],
+['Cloaked','Fades almost invisible until close.','cloaked',12,72,18,'#647080'],
+['Vampire','Heals itself when it damages you.','vampire',15,66,20,'#b54269'],
+['Necromancer','Periodically summons a mini walker.','necro',22,42,22,'#6f5c99'],
+['Howler','Buffs nearby zombies with a speed roar.','howler',18,44,21,'#d9d3c0'],
+['Graviton','Pulls you toward it at intervals.','graviton',24,38,25,'#586cff'],
+['Webber','Shoots webs that slow you.','webber',13,45,19,'#dedede'],
+['Burrower','Dives underground and reappears near you.','burrower',14,76,18,'#9b754f'],
+['Mirror','Creates a temporary fake clone.','mirror',18,55,21,'#a9c6e8'],
+['Turret','Plants itself and fires bursts.','turret',16,10,20,'#72808f'],
+['Acid Tank','Slow, huge, leaves corrosive pools.','acidTank',38,30,31,'#78c94d'],
+['Firefly','Fast enemy that fires burning darts.','firefly',7,112,13,'#ffd34f'],
+['Shardling','Fires three ice shards in a cone.','shardling',12,54,18,'#7de9ff'],
+['Chain','Jumps lightning between nearby targets.','chain',18,64,19,'#b56cff'],
+['Rammer','Charges in a straight line.','rammer',24,58,24,'#cc6f50'],
+['Plague Doctor','Applies a stacking poison debuff.','plague',20,50,22,'#b4d07a'],
+['Chrono','Slows your fire rate periodically.','chrono',25,46,23,'#d5a6ff'],
+['Mimic','Disguises itself as a harmless pickup until close.','mimic',15,78,18,'#caa36a'],
+['Screamer','At low health calls a swarm of runners.','screamer',20,52,20,'#e1e1e1'],
+['Juggernaut','Armored mini-boss that periodically charges.','juggernaut',70,42,34,'#596473'],
+['Voidling','Creates a damaging void zone.','void',28,62,25,'#4d2d7d'],
+['Rocket','Launches slow homing rockets.','rocket',22,44,21,'#d35a62'],
+['Overlord','Rare boss with multiple attacks.','boss',260,34,48,'#8f2435'],
+['Verity','Boss: uses Truth Ray, Smile Mines, Reality Split, and a brutal Phase 2.','verity',520,42,72,'#efff00'],
+['Truthling','Verity minion. Fast, relentless, and dangerous in groups.','verityMinion',18,112,24,'#eaff3f'],
+['Doubtling','Verity minion. Keeps distance and fires truth shards.','doubtling',26,62,25,'#cfff45'],
+// Boss roster — each boss has a distinct fight pattern.
+['Dreadnought','Boss: armored charger with sweeping cannon fire and shockwaves.','dreadnought',430,34,58,'#b86b4b'],
+['Rift Queen','Boss: teleports, opens rifts, and summons Voidlings.','riftQueen',390,48,52,'#8f62d9'],
+['Bone Colossus','Boss: gains armor plates and pounds the arena with seismic slams.','boneColossus',620,27,68,'#c8b78d'],
+['Chrono Tyrant','Boss: manipulates time, slows you, and fires clockwork volleys.','chronoTyrant',470,40,55,'#b78cff'],
+['Swarm Mother','Boss: rapidly breeds Runners and creates dangerous egg nests.','swarmMother',360,56,50,'#7bc95b'],
+];
+
+// 110 MORE zombies with 22 distinct behavior archetypes.
+const megaZombies=[
+["Chaser Mutant 001","Rushes directly at you with a unique mutation pattern #1.","adv0",8,45,15,"#5cc85c","chaser"],
+["Sprinter Mutant 002","Accelerates in short bursts with a unique mutation pattern #2.","adv1",12,54,17,"#ff9f43","sprinter"],
+["Sniper Mutant 003","Keeps distance and fires precise shots with a unique mutation pattern #3.","adv2",16,63,19,"#7d8cff","sniper"],
+["Shotgunner Mutant 004","Fires a three-shot spread with a unique mutation pattern #4.","adv3",20,72,21,"#b66cff","shotgunner"],
+["Grenadier Mutant 005","Throws delayed explosive orbs with a unique mutation pattern #5.","adv4",24,81,23,"#ff6b5e","grenadier"],
+["Healer Mutant 006","Heals nearby zombies periodically with a unique mutation pattern #6.","adv5",28,90,15,"#65d8c2","healer"],
+["Buffer Mutant 007","Boosts nearby enemies with a unique mutation pattern #7.","adv6",32,99,17,"#d7cf5d","buffer"],
+["Freezer Mutant 008","Fires slowing ice bolts with a unique mutation pattern #8.","adv7",36,108,19,"#6dd6ff","freezer"],
+["Burner2 Mutant 009","Creates a burning trail with a unique mutation pattern #9.","adv8",40,117,21,"#e77a42","burner2"],
+["Acid Mutant 010","Drops corrosive pools with a unique mutation pattern #10.","adv9",44,45,23,"#a7d957","acid"],
+["Teleporter Mutant 011","Teleports to a new angle with a unique mutation pattern #11.","adv10",48,54,15,"#c77dff","teleporter"],
+["Charger Mutant 012","Charges in a straight line with a unique mutation pattern #12.","adv11",8,63,17,"#5cc85c","charger"],
+["Summoner Mutant 013","Summons smaller zombies with a unique mutation pattern #13.","adv12",12,72,19,"#ff9f43","summoner"],
+["Drainer Mutant 014","Reduces your healing briefly with a unique mutation pattern #14.","adv13",16,81,21,"#7d8cff","drainer"],
+["Disabler Mutant 015","Temporarily slows your fire rate with a unique mutation pattern #15.","adv14",20,90,23,"#b66cff","disabler"],
+["Swarm Mutant 016","Splits into two on death with a unique mutation pattern #16.","adv15",24,99,15,"#ff6b5e","swarm"],
+["Shield Mutant 017","Periodically becomes bullet resistant with a unique mutation pattern #17.","adv16",28,108,17,"#65d8c2","shield"],
+["Vortex Mutant 018","Pulls you toward it with a unique mutation pattern #18.","adv17",32,117,19,"#d7cf5d","vortex"],
+["Minelayer Mutant 019","Plants proximity mines with a unique mutation pattern #19.","adv18",36,45,21,"#6dd6ff","mineLayer"],
+["Lasher Mutant 020","Fires a sweeping beam with a unique mutation pattern #20.","adv19",40,54,23,"#e77a42","lasher"],
+["Splitter2 Mutant 021","Splits into fast fragments with a unique mutation pattern #21.","adv20",44,63,15,"#a7d957","splitter2"],
+["Leech Mutant 022","Steals health when close with a unique mutation pattern #22.","adv21",48,72,17,"#c77dff","leech"],
+["Chaser Mutant 023","Rushes directly at you with a unique mutation pattern #23.","adv22",13,81,19,"#5cc85c","chaser"],
+["Sprinter Mutant 024","Accelerates in short bursts with a unique mutation pattern #24.","adv23",17,90,21,"#ff9f43","sprinter"],
+["Sniper Mutant 025","Keeps distance and fires precise shots with a unique mutation pattern #25.","adv24",21,99,23,"#7d8cff","sniper"],
+["Shotgunner Mutant 026","Fires a three-shot spread with a unique mutation pattern #26.","adv25",25,108,15,"#b66cff","shotgunner"],
+["Grenadier Mutant 027","Throws delayed explosive orbs with a unique mutation pattern #27.","adv26",29,117,17,"#ff6b5e","grenadier"],
+["Healer Mutant 028","Heals nearby zombies periodically with a unique mutation pattern #28.","adv27",33,45,19,"#65d8c2","healer"],
+["Buffer Mutant 029","Boosts nearby enemies with a unique mutation pattern #29.","adv28",37,54,21,"#d7cf5d","buffer"],
+["Freezer Mutant 030","Fires slowing ice bolts with a unique mutation pattern #30.","adv29",41,63,23,"#6dd6ff","freezer"],
+["Burner2 Mutant 031","Creates a burning trail with a unique mutation pattern #31.","adv30",45,72,15,"#e77a42","burner2"],
+["Acid Mutant 032","Drops corrosive pools with a unique mutation pattern #32.","adv31",49,81,17,"#a7d957","acid"],
+["Teleporter Mutant 033","Teleports to a new angle with a unique mutation pattern #33.","adv32",53,90,19,"#c77dff","teleporter"],
+["Charger Mutant 034","Charges in a straight line with a unique mutation pattern #34.","adv33",13,99,21,"#5cc85c","charger"],
+["Summoner Mutant 035","Summons smaller zombies with a unique mutation pattern #35.","adv34",17,108,23,"#ff9f43","summoner"],
+["Drainer Mutant 036","Reduces your healing briefly with a unique mutation pattern #36.","adv35",21,117,15,"#7d8cff","drainer"],
+["Disabler Mutant 037","Temporarily slows your fire rate with a unique mutation pattern #37.","adv36",25,45,17,"#b66cff","disabler"],
+["Swarm Mutant 038","Splits into two on death with a unique mutation pattern #38.","adv37",29,54,19,"#ff6b5e","swarm"],
+["Shield Mutant 039","Periodically becomes bullet resistant with a unique mutation pattern #39.","adv38",33,63,21,"#65d8c2","shield"],
+["Vortex Mutant 040","Pulls you toward it with a unique mutation pattern #40.","adv39",37,72,23,"#d7cf5d","vortex"],
+["Minelayer Mutant 041","Plants proximity mines with a unique mutation pattern #41.","adv40",41,81,15,"#6dd6ff","mineLayer"],
+["Lasher Mutant 042","Fires a sweeping beam with a unique mutation pattern #42.","adv41",45,90,17,"#e77a42","lasher"],
+["Splitter2 Mutant 043","Splits into fast fragments with a unique mutation pattern #43.","adv42",49,99,19,"#a7d957","splitter2"],
+["Leech Mutant 044","Steals health when close with a unique mutation pattern #44.","adv43",53,108,21,"#c77dff","leech"],
+["Chaser Mutant 045","Rushes directly at you with a unique mutation pattern #45.","adv44",18,117,23,"#5cc85c","chaser"],
+["Sprinter Mutant 046","Accelerates in short bursts with a unique mutation pattern #46.","adv45",22,45,15,"#ff9f43","sprinter"],
+["Sniper Mutant 047","Keeps distance and fires precise shots with a unique mutation pattern #47.","adv46",26,54,17,"#7d8cff","sniper"],
+["Shotgunner Mutant 048","Fires a three-shot spread with a unique mutation pattern #48.","adv47",30,63,19,"#b66cff","shotgunner"],
+["Grenadier Mutant 049","Throws delayed explosive orbs with a unique mutation pattern #49.","adv48",34,72,21,"#ff6b5e","grenadier"],
+["Healer Mutant 050","Heals nearby zombies periodically with a unique mutation pattern #50.","adv49",38,81,23,"#65d8c2","healer"],
+["Buffer Mutant 051","Boosts nearby enemies with a unique mutation pattern #51.","adv50",42,90,15,"#d7cf5d","buffer"],
+["Freezer Mutant 052","Fires slowing ice bolts with a unique mutation pattern #52.","adv51",46,99,17,"#6dd6ff","freezer"],
+["Burner2 Mutant 053","Creates a burning trail with a unique mutation pattern #53.","adv52",50,108,19,"#e77a42","burner2"],
+["Acid Mutant 054","Drops corrosive pools with a unique mutation pattern #54.","adv53",54,117,21,"#a7d957","acid"],
+["Teleporter Mutant 055","Teleports to a new angle with a unique mutation pattern #55.","adv54",58,45,23,"#c77dff","teleporter"],
+["Charger Mutant 056","Charges in a straight line with a unique mutation pattern #56.","adv55",18,54,15,"#5cc85c","charger"],
+["Summoner Mutant 057","Summons smaller zombies with a unique mutation pattern #57.","adv56",22,63,17,"#ff9f43","summoner"],
+["Drainer Mutant 058","Reduces your healing briefly with a unique mutation pattern #58.","adv57",26,72,19,"#7d8cff","drainer"],
+["Disabler Mutant 059","Temporarily slows your fire rate with a unique mutation pattern #59.","adv58",30,81,21,"#b66cff","disabler"],
+["Swarm Mutant 060","Splits into two on death with a unique mutation pattern #60.","adv59",34,90,23,"#ff6b5e","swarm"],
+["Shield Mutant 061","Periodically becomes bullet resistant with a unique mutation pattern #61.","adv60",38,99,15,"#65d8c2","shield"],
+["Vortex Mutant 062","Pulls you toward it with a unique mutation pattern #62.","adv61",42,108,17,"#d7cf5d","vortex"],
+["Minelayer Mutant 063","Plants proximity mines with a unique mutation pattern #63.","adv62",46,117,19,"#6dd6ff","mineLayer"],
+["Lasher Mutant 064","Fires a sweeping beam with a unique mutation pattern #64.","adv63",50,45,21,"#e77a42","lasher"],
+["Splitter2 Mutant 065","Splits into fast fragments with a unique mutation pattern #65.","adv64",54,54,23,"#a7d957","splitter2"],
+["Leech Mutant 066","Steals health when close with a unique mutation pattern #66.","adv65",58,63,15,"#c77dff","leech"],
+["Chaser Mutant 067","Rushes directly at you with a unique mutation pattern #67.","adv66",23,72,17,"#5cc85c","chaser"],
+["Sprinter Mutant 068","Accelerates in short bursts with a unique mutation pattern #68.","adv67",27,81,19,"#ff9f43","sprinter"],
+["Sniper Mutant 069","Keeps distance and fires precise shots with a unique mutation pattern #69.","adv68",31,90,21,"#7d8cff","sniper"],
+["Shotgunner Mutant 070","Fires a three-shot spread with a unique mutation pattern #70.","adv69",35,99,23,"#b66cff","shotgunner"],
+["Grenadier Mutant 071","Throws delayed explosive orbs with a unique mutation pattern #71.","adv70",39,108,15,"#ff6b5e","grenadier"],
+["Healer Mutant 072","Heals nearby zombies periodically with a unique mutation pattern #72.","adv71",43,117,17,"#65d8c2","healer"],
+["Buffer Mutant 073","Boosts nearby enemies with a unique mutation pattern #73.","adv72",47,45,19,"#d7cf5d","buffer"],
+["Freezer Mutant 074","Fires slowing ice bolts with a unique mutation pattern #74.","adv73",51,54,21,"#6dd6ff","freezer"],
+["Burner2 Mutant 075","Creates a burning trail with a unique mutation pattern #75.","adv74",55,63,23,"#e77a42","burner2"],
+["Acid Mutant 076","Drops corrosive pools with a unique mutation pattern #76.","adv75",59,72,15,"#a7d957","acid"],
+["Teleporter Mutant 077","Teleports to a new angle with a unique mutation pattern #77.","adv76",63,81,17,"#c77dff","teleporter"],
+["Charger Mutant 078","Charges in a straight line with a unique mutation pattern #78.","adv77",23,90,19,"#5cc85c","charger"],
+["Summoner Mutant 079","Summons smaller zombies with a unique mutation pattern #79.","adv78",27,99,21,"#ff9f43","summoner"],
+["Drainer Mutant 080","Reduces your healing briefly with a unique mutation pattern #80.","adv79",31,108,23,"#7d8cff","drainer"],
+["Disabler Mutant 081","Temporarily slows your fire rate with a unique mutation pattern #81.","adv80",35,117,15,"#b66cff","disabler"],
+["Swarm Mutant 082","Splits into two on death with a unique mutation pattern #82.","adv81",39,45,17,"#ff6b5e","swarm"],
+["Shield Mutant 083","Periodically becomes bullet resistant with a unique mutation pattern #83.","adv82",43,54,19,"#65d8c2","shield"],
+["Vortex Mutant 084","Pulls you toward it with a unique mutation pattern #84.","adv83",47,63,21,"#d7cf5d","vortex"],
+["Minelayer Mutant 085","Plants proximity mines with a unique mutation pattern #85.","adv84",51,72,23,"#6dd6ff","mineLayer"],
+["Lasher Mutant 086","Fires a sweeping beam with a unique mutation pattern #86.","adv85",55,81,15,"#e77a42","lasher"],
+["Splitter2 Mutant 087","Splits into fast fragments with a unique mutation pattern #87.","adv86",59,90,17,"#a7d957","splitter2"],
+["Leech Mutant 088","Steals health when close with a unique mutation pattern #88.","adv87",63,99,19,"#c77dff","leech"],
+["Chaser Mutant 089","Rushes directly at you with a unique mutation pattern #89.","adv88",28,108,21,"#5cc85c","chaser"],
+["Sprinter Mutant 090","Accelerates in short bursts with a unique mutation pattern #90.","adv89",32,117,23,"#ff9f43","sprinter"],
+["Sniper Mutant 091","Keeps distance and fires precise shots with a unique mutation pattern #91.","adv90",36,45,15,"#7d8cff","sniper"],
+["Shotgunner Mutant 092","Fires a three-shot spread with a unique mutation pattern #92.","adv91",40,54,17,"#b66cff","shotgunner"],
+["Grenadier Mutant 093","Throws delayed explosive orbs with a unique mutation pattern #93.","adv92",44,63,19,"#ff6b5e","grenadier"],
+["Healer Mutant 094","Heals nearby zombies periodically with a unique mutation pattern #94.","adv93",48,72,21,"#65d8c2","healer"],
+["Buffer Mutant 095","Boosts nearby enemies with a unique mutation pattern #95.","adv94",52,81,23,"#d7cf5d","buffer"],
+["Freezer Mutant 096","Fires slowing ice bolts with a unique mutation pattern #96.","adv95",56,90,15,"#6dd6ff","freezer"],
+["Burner2 Mutant 097","Creates a burning trail with a unique mutation pattern #97.","adv96",60,99,17,"#e77a42","burner2"],
+["Acid Mutant 098","Drops corrosive pools with a unique mutation pattern #98.","adv97",64,108,19,"#a7d957","acid"],
+["Teleporter Mutant 099","Teleports to a new angle with a unique mutation pattern #99.","adv98",68,117,21,"#c77dff","teleporter"],
+["Charger Mutant 100","Charges in a straight line with a unique mutation pattern #100.","adv99",28,45,23,"#5cc85c","charger"],
+["Summoner Mutant 101","Summons smaller zombies with a unique mutation pattern #101.","adv100",32,54,15,"#ff9f43","summoner"],
+["Drainer Mutant 102","Reduces your healing briefly with a unique mutation pattern #102.","adv101",36,63,17,"#7d8cff","drainer"],
+["Disabler Mutant 103","Temporarily slows your fire rate with a unique mutation pattern #103.","adv102",40,72,19,"#b66cff","disabler"],
+["Swarm Mutant 104","Splits into two on death with a unique mutation pattern #104.","adv103",44,81,21,"#ff6b5e","swarm"],
+["Shield Mutant 105","Periodically becomes bullet resistant with a unique mutation pattern #105.","adv104",48,90,23,"#65d8c2","shield"],
+["Vortex Mutant 106","Pulls you toward it with a unique mutation pattern #106.","adv105",52,99,15,"#d7cf5d","vortex"],
+["Minelayer Mutant 107","Plants proximity mines with a unique mutation pattern #107.","adv106",56,108,17,"#6dd6ff","mineLayer"],
+["Lasher Mutant 108","Fires a sweeping beam with a unique mutation pattern #108.","adv107",60,117,19,"#e77a42","lasher"],
+["Splitter2 Mutant 109","Splits into fast fragments with a unique mutation pattern #109.","adv108",64,45,21,"#a7d957","splitter2"],
+["Leech Mutant 110","Steals health when close with a unique mutation pattern #110.","adv109",68,54,23,"#c77dff","leech"]
+];
+for(const z of megaZombies)zombieTypes.push(z);
+
+const bossKinds=new Set(['boss','verity','dreadnought','riftQueen','boneColossus','chronoTyrant','swarmMother']);
+
+// 12 additional unique bosses.
+const megaBosses=[
+["Titan Maw","Boss: devours space with shockwaves and brutal charges.","megaBoss0",520,38,62,"#c45a42","maw"],
+["Plasma Warden","Boss: fires rotating plasma rings and locks zones.","megaBoss1",560,34,60,"#5ed8ff","plasma"],
+["Grave Weaver","Boss: webs the arena and summons bone crawlers.","megaBoss2",500,42,58,"#9b79c9","grave"],
+["Storm Hydra","Boss: three rotating lightning heads create crossfire.","megaBoss3",610,36,64,"#6fc3ff","hydra"],
+["Blight Engine","Boss: spreads poison fields and launches toxic volleys.","megaBoss4",580,30,61,"#84c95a","blight"],
+["Iron Phantom","Boss: phases out, dashes, and strikes from behind.","megaBoss5",540,55,56,"#aeb7c8","phantom"],
+["Solar Reaper","Boss: charges a huge beam and scorches safe zones.","megaBoss6",650,31,65,"#ffd34f","solar"],
+["Frost Titan","Boss: freezes lanes and rains shards from above.","megaBoss7",700,28,68,"#8ee9ff","frost"],
+["Rage Core","Boss: becomes faster and deadlier as its health drops.","megaBoss8",630,45,60,"#ff5b62","rage"],
+["Void Emperor","Boss: opens collapsing rifts and fires void spears.","megaBoss9",760,32,70,"#8c62d8","void"],
+["Hive Queen","Boss: fills the arena with nests and hunting drones.","megaBoss10",590,46,59,"#9ed35c","hive"],
+["Clockwork Judge","Boss: marks time zones and unleashes synchronized barrages.","megaBoss11",680,39,63,"#d2a4ff","clock"]
+];
+for(const b of megaBosses)zombieTypes.push(b);
+
+const isBossKind=k=>bossKinds.has(k)||k.startsWith('megaBoss');
+function makeZ(t,scale=1,x=null,y=null){
+ const [name,desc,kind,hp,speed,r,col]=t;const behavior=t[7]||null;
+ if(x===null){const side=Math.floor(Math.random()*4);x=side===0?-50:side===1?W+50:Math.random()*W;y=side===2?-50:side===3?H+50:Math.random()*H}
+ queueZombieDiscovery(t);
+ return {name,desc,kind,hp:hp*scale,maxHp:hp*scale,speed:speed*(1+Math.max(0,wave-1)*.018),r,x,y,col,slow:0,stun:0,shoot:rand(1,3),ability:rand(2,5),charge:0,dead:false,clone:false,anim:Math.random()*Math.PI*2,hit:0,flash:0,spawn:0,phase:1,beamAngle:0,beamTimer:rand(1.4,2.6),mineTimer:rand(1.8,3.2),cloneTimer:0,fireTimer:rand(.15,.5),buffTimer:0,burrowed:false,burrowTimer:0,plagueTimer:0,behavior,advTimer:rand(1,3),special:0,armorTimer:0,beamSweep:0};
+}
+function typePool(){
+ let arr=zombieTypes.filter((t,i)=>!isBossKind(t[2]) && t[2]!=='verityClone' && t[2]!=='verityMinion' && t[2]!=='doubtling' && (i===0 || i<=Math.min(zombieTypes.length-1,Math.floor(4+wave*1.8))));
+ return arr;
+}
+function spawnVerityMinions(z,n){
+  const choices=[
+    ['Truthling','Verity minion. Fast, relentless, and dangerous in groups.','verityMinion',18,112,24,'#eaff3f'],
+    ['Doubtling','Verity minion. Keeps distance and fires truth shards.','doubtling',26,62,25,'#cfff45']
+  ];
+  for(let i=0;i<n;i++){
+    const t=choices[Math.floor(Math.random()*choices.length)];
+    zombies.push(makeZ(t,1+wave*.08,z.x+rand(-120,120),z.y+rand(-120,120)));
+  }
+}
+const verityBoss=['Verity','The smiling truth. Splits reality, fires a Truth Ray, and turns the arena into a minefield.','verity',520,42,72,'#efff00'];
+const bossRoster=[
+ zombieTypes.find(t=>t[2]==='boss'),verityBoss,
+ zombieTypes.find(t=>t[2]==='dreadnought'),zombieTypes.find(t=>t[2]==='riftQueen'),
+ zombieTypes.find(t=>t[2]==='boneColossus'),zombieTypes.find(t=>t[2]==='chronoTyrant'),zombieTypes.find(t=>t[2]==='swarmMother'),
+ ...megaBosses
+].filter(Boolean);
+function bossPool(){ return bossRoster; }
+function spawnZombie(){
+ const pool=typePool();const t=pool[Math.floor(Math.random()*pool.length)];
+ zombies.push(makeZ(t,1+Math.max(0,wave-1)*.085));
+}
+function spawnWave(){
+ zombies=[];bullets=[];enemyBullets=[];effects=[];
+ const count=6+Math.floor(wave*3.7);
+ for(let i=0;i<count;i++)spawnZombie();
+ if(wave%5===0){
+   const boss=bossPool()[Math.floor(Math.random()*bossPool().length)];
+   const bossScale=1+wave*.21;
+   const b=makeZ(boss,bossScale,W/2,-80);
+   b.ability=1.6;b.beamTimer=2.4;b.mineTimer=2.8;
+   zombies.push(b);
+   say('⚠ '+b.name.toUpperCase()+' HAS ARRIVED');
+ } else {
+   say('WAVE '+wave);
+ }
+}
+function damagePlayer(amount,source=''){
+ if(gameOver)return;
+ if(Math.random()<player.dashChance)return;
+ amount*=player.damageTaken;
+ if(player.shield>0){const absorbed=Math.min(player.shield,amount);player.shield-=absorbed;amount-=absorbed}
+ if(amount<=0)return;
+ player.hp-=amount;player.damageFlash=.22;player.combo=0;player.comboTimer=0;
+ if(player.hp<=0){
+  if(player.extraLife>0){player.extraLife--;player.hp=Math.max(1,player.maxHp*.4);player.shield=player.shieldMax;say('PHOENIX!');return}
+  player.hp=0;gameOver=true;running=false;paused=false;
+  document.getElementById('finalStats').innerHTML=`Wave <b>${wave}</b> · Kills <b>${kills}</b><br><span style="color:#aeb8c6">Your run ended. Pick different upgrades and try again.</span>`;
+  document.getElementById('gameover').style.display='grid';
+ }
+}
+function shoot(){
+ if(!running||paused||gameOver)return;
+ const now=performance.now()/1000;
+ const reload=Math.max(.055,player.reload*(1-player.fireRate)*player.chronoSlow*(player.berserk&&player.hp<player.maxHp*.2?.75:1));
+ if(now-player.lastShot<reload)return;
+ player.lastShot=now;player.recoil=1;player.flash=.08;
+ const n=player.shots;
+ for(let i=0;i<n;i++){
+  const center=(n-1)/2;
+  let a=player.angle+(i-center)*player.spread;
+  let dmg=player.damage*(Math.random()<player.crit?player.critMult:1);
+  if(player.hp<player.maxHp*.35)dmg*=1+player.berserk;
+  if(player.hp<player.maxHp*.2)dmg*=1.6;
+  if(wave>=10)dmg*=1.25;
+  if(Math.random()<.05)dmg*=4;
+  bullets.push({x:player.x+Math.cos(a)*25,y:player.y+Math.sin(a)*25,vx:Math.cos(a)*player.bulletSpeed,vy:Math.sin(a)*player.bulletSpeed,r:player.bulletSize,damage:dmg,life:player.bulletLife,pierce:player.pierce,bounces:player.bounce||0,hit:new Set(),glow:player.plasma||false});
+ }
+ if(player.doubletap&&Math.random()<.1)setTimeout(shoot,65);
+ if(player.echo&&Math.random()<.1)setTimeout(shoot,120);
+}
+function hurtZombie(z,dmg,b){
+ if(z.dead)return;
+ if(z.kind==='shield'){const front=Math.atan2(player.y-z.y,player.x-z.x),incoming=Math.atan2(b.vy,b.vx);let da=Math.atan2(Math.sin(front-incoming),Math.cos(front-incoming));if(Math.abs(da)<1.25)dmg*=.12;}
+ if(z.kind==='ice'&&player.cryo)dmg*=1.25;
+ if(z.hp<z.maxHp*.2)dmg*=1+(player.execute||0)+(player.execute2||0);
+ if(isBossKind(z.kind)&&player.boss)dmg*=1+player.boss;
+ if(z.kind==='boneColossus'&&z.armor>0)dmg*=.18;
+ if(z.r>22)dmg*=1+(player.tankbuster||0);
+ if(z.speed>100)dmg*=1+(player.fastbuster||0);
+ if(player.close && dist(player.x,player.y,z.x,z.y)<150)dmg*=1.45;
+ if(player.hunter && dist(player.x,player.y,z.x,z.y)>300)dmg*=1.2;
+ if(player.crowd && zombies.length>=5)dmg*=1.35;
+ z.hp-=dmg;z.hit=.08;z.flash=.12;
+ if(player.freeze)z.slow=Math.max(z.slow,1.4);
+ if(player.poison){z.poison=2.5;z.poisonD=player.poison}
+ if(player.shock)z.stun=.3;
+ if(player.knockback){const a=Math.atan2(z.y-player.y,z.x-player.x);z.x+=Math.cos(a)*player.knockback;z.y+=Math.sin(a)*player.knockback}
+ if(player.explosive&&Math.random()<player.explosive){explode(z.x,z.y,dmg*2,player.explosionRadius)}
+ if(player.chain&&Math.random()<player.chain){let targets=zombies.filter(q=>q!==z&&!q.dead&&dist(z.x,z.y,q.x,q.y)<180).slice(0,2+(player.chain2||0));for(const q of targets)q.hp-=dmg*player.chainDamage}
+}
+function explode(x,y,dmg,r=80){
+ effects.push({type:'blast',x,y,r:5,max:r,life:.45});
+ for(const z of zombies)if(!z.dead&&dist(x,y,z.x,z.y)<r)hurtZombie(z,dmg,{vx:1,vy:0});
+ for(let i=0;i<26;i++){const a=Math.random()*Math.PI*2,s=rand(50,220);particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.45,r:rand(2,5),color:['#ffd66b','#ff7b7b','#a5f3ff','#c58cff'][Math.floor(Math.random()*4)]})}
+}
+function killZombie(z){
+ if(z.dead)return;
+ z.dead=true;
+ if(!z.clone){
+   kills++;
+   if(player.healLock<=0)player.hp=clamp(player.hp+player.healOnKill+player.lifeSteal*player.maxHp,0,player.maxHp);
+   if(kills%25===0){player.hp=clamp(player.hp+15,0,player.maxHp)}
+ }
+ if(z.kind==='bomber')explode(z.x,z.y,player.damage*7,105);
+ if(z.kind==='splitter')for(let i=0;i<2;i++){const t=zombieTypes[0],s=makeZ(t,.65,z.x+rand(-20,20),z.y+rand(-20,20));zombies.push(s)}
+ if(z.kind==='vampire')player.hp=clamp(player.hp-0,0,player.maxHp);
+ if(z.kind==='acidTank'||z.kind==='void')effects.push({type:'pool',x:z.x,y:z.y,r:55,life:4});
+ if(z.kind==='screamer')for(let i=0;i<3;i++){const t=zombieTypes[1],s=makeZ(t,.7,z.x+rand(-30,30),z.y+rand(-30,30));zombies.push(s)}
+ if(z.kind==='verity'){
+   explode(z.x,z.y,player.damage*12,210);
+   effects.push({type:'blast',x:z.x,y:z.y,r:20,max:420,life:.8,verity:true});
+   for(let i=0;i<45;i++){const a=Math.random()*Math.PI*2,s=rand(80,360);particles.push({x:z.x,y:z.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1.1,r:rand(2,6),color:'#efff00'})}
+   say('VERITY BROKEN');
+ }
+ if(z.kind.startsWith('adv')&&['swarm','splitter2'].includes(z.behavior)&&!z.hasSplit){z.hasSplit=true;for(let i=0;i<2;i++){const t=megaZombies[(Math.floor(Math.random()*megaZombies.length))];zombies.push(makeZ(t,.52,z.x+rand(-18,18),z.y+rand(-18,18)))}}
+ if(kills%20===0&&player.reality)explode(player.x,player.y,player.damage*8,500);
+ texts.push({x:z.x,y:z.y,text:'+'+(isBossKind(z.kind)?500:10),life:1});
+}
+function enemyAI(z,dt){
+ if(z.dead)return;
+ z.shoot-=dt;z.ability-=dt;z.hit=Math.max(0,(z.hit||0)-dt);z.slow=Math.max(0,z.slow-dt);z.stun=Math.max(0,z.stun-dt);
+ const d=dist(z.x,z.y,player.x,player.y),a=Math.atan2(player.y-z.y,player.x-z.x);
+ if(z.kind==='shooter'&&z.shoot<=0){z.shoot=1.8;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(a)*270,vy:Math.sin(a)*270,r:6,life:4,damage:10})}
+ if(z.kind==='spitter'&&z.shoot<=0){z.shoot=2.4;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(a)*190,vy:Math.sin(a)*190,r:9,life:4,damage:15,acid:true})}
+ if(z.kind==='shardling'&&z.shoot<=0){z.shoot=2.8;for(let i=-1;i<=1;i++){const aa=a+i*.22;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(aa)*220,vy:Math.sin(aa)*220,r:6,life:4,damage:9,ice:true})}}
+ if(z.kind==='firefly'&&z.shoot<=0){z.shoot=1.6;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(a)*300,vy:Math.sin(a)*300,r:5,life:3,damage:12,burn:true})}
+ if(z.kind==='rocket'&&z.shoot<=0){z.shoot=3;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(a)*120,vy:Math.sin(a)*120,r:10,life:5,damage:25,homing:true})}
+ if(z.kind==='turret'&&z.shoot<=0){z.shoot=2;for(let i=-1;i<=1;i++){const aa=a+i*.18;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(aa)*250,vy:Math.sin(aa)*250,r:6,life:3,damage:9})}}
+ if(z.kind==='necro'&&z.ability<=0){z.ability=4;const t=zombieTypes[0];zombies.push(makeZ(t,.7,z.x+rand(-30,30),z.y+rand(-30,30)))}
+ if(z.kind==='leaper'&&z.ability<=0){z.ability=3;z.x+=Math.cos(a)*130;z.y+=Math.sin(a)*130}
+ if(z.kind==='blinker'&&z.ability<=0){z.ability=3;z.x=clamp(player.x+rand(-220,220),20,W-20);z.y=clamp(player.y+rand(-220,220),20,H-20)}
+ if(z.kind==='graviton'&&z.ability<=0&&d<350){z.ability=3;player.x+=Math.cos(a)*35;player.y+=Math.sin(a)*35}
+ if(z.kind==='webber'&&z.ability<=0&&d<450){z.ability=3;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(a)*160,vy:Math.sin(a)*160,r:12,life:3,damage:4,web:true})}
+ if(z.kind==='rammer'&&z.ability<=0){z.ability=2.7;z.charge=1.0}
+ if(z.kind==='void'&&z.ability<=0){z.ability=4;effects.push({type:'pool',x:player.x,y:player.y,r:65,life:3})}
+
+ // Behaviors for enemies whose descriptions promise special mechanics.
+ if(z.kind==='burner'&&z.fireTimer<=0){z.fireTimer=.32;effects.push({type:'firePool',x:z.x,y:z.y,r:30,life:2.4,damage:12})}
+ if(z.kind==='acidTank'&&z.fireTimer<=0){z.fireTimer=.55;effects.push({type:'acidPool',x:z.x,y:z.y,r:46,life:4,damage:14})}
+ if(z.kind==='volt'&&z.ability<=0){z.ability=2.1;for(const q of zombies)if(q!==z&&!q.dead&&dist(z.x,z.y,q.x,q.y)<125)q.hp-=7; if(d<170)damagePlayer(10,'voltShock'); effects.push({type:'chainZap',x:z.x,y:z.y,tx:player.x,ty:player.y,life:.22})}
+ if(z.kind==='chain'&&z.ability<=0){z.ability=2.4;const targets=[...zombies].filter(q=>!q.dead&&q!==z&&dist(z.x,z.y,q.x,q.y)<190).sort((u,v)=>dist(z.x,z.y,u.x,u.y)-dist(z.x,z.y,v.x,v.y)).slice(0,2);if(d<360){damagePlayer(12,'chain');effects.push({type:'chainZap',x:z.x,y:z.y,tx:player.x,ty:player.y,life:.24})}for(const q of targets){q.hp-=10;effects.push({type:'chainZap',x:z.x,y:z.y,tx:q.x,ty:q.y,life:.2})}}
+ if(z.kind==='mirror'&&z.ability<=0&&d<420){z.ability=5.5;const c=makeZ(['Mirror Clone','Temporary fake clone.','mirrorClone',8,92,15,'#b8d7ff'],.75,z.x+rand(-45,45),z.y+rand(-45,45));c.clone=true;c.cloneLife=4;zombies.push(c)}
+ if(z.kind==='burrower'&&!z.burrowed&&z.ability<=0){z.ability=4.5;z.burrowed=true;z.burrowTimer=1.0;z.spawn=0}
+ if(z.kind==='burrower'&&z.burrowed){z.burrowTimer-=dt;if(z.burrowTimer<=0){z.x=clamp(player.x+rand(-140,140),25,W-25);z.y=clamp(player.y+rand(-140,140),25,H-25);z.burrowed=false;z.spawn=.05}return}
+ if(z.kind==='howler'&&z.ability<=0){z.ability=4.5;for(const q of zombies)if(q!==z&&dist(z.x,z.y,q.x,q.y)<230)q.buffTimer=3.2}
+ if(z.kind==='chrono'&&z.ability<=0&&d<500){z.ability=4;player.chronoSlow=1.35;player.chronoSlowTime=2.2;effects.push({type:'chronoWave',x:z.x,y:z.y,life:.4})}
+ if(z.kind==='plague'&&d<120&&z.plagueTimer<=0){z.plagueTimer=.65;player.enemyPoisonStacks=Math.min(5,player.enemyPoisonStacks+1);player.enemyPoisonTime=3.5}
+ if(z.kind==='mimic')z.mimicAwake=d<145;
+
+ // VERITY — an intentionally nasty boss with three unique attacks and a phase 2.
+ if(z.kind==='verity'){
+   const hpRatio=z.hp/z.maxHp;
+   if(hpRatio<.5 && z.phase===1){
+     z.phase=2;
+     z.ability=.1;z.beamTimer=.2;z.mineTimer=.3;
+     spawnVerityMinions(z,5); for(let i=0;i<3;i++){const t=zombieTypes[1];zombies.push(makeZ(t,.95,z.x+rand(-100,100),z.y+rand(-100,100)))}
+     say('VERITY PHASE 2: NO MORE LIES');
+     effects.push({type:'blast',x:z.x,y:z.y,r:15,max:300,life:.6,verity:true});
+   }
+
+   const speedBoost=z.phase===2?1.22:1;
+   z.speed*=1; // keeps the existing per-frame speed state stable
+
+   // Truth Ray: telegraphed beam aimed at the player.
+   z.beamTimer-=dt;
+   if(z.beamTimer<=0){
+     z.beamTimer=z.phase===2?2.7:3.8;
+     z.beamAngle=a;
+     effects.push({type:'verityBeam',x:z.x,y:z.y,angle:a,life:1.15,telegraph:.48,width:z.phase===2?24:18,damage:z.phase===2?42:30});
+     say('VERITY: LOOK AT THE TRUTH');
+   }
+
+   // Smile Mines: several delayed traps appear around the player.
+   z.mineTimer-=dt;
+   if(z.mineTimer<=0){
+     z.mineTimer=z.phase===2?3.1:4.8;
+     const n=z.phase===2?7:5;
+     for(let i=0;i<n;i++){
+       const aa=Math.random()*Math.PI*2,rr=rand(90,z.phase===2?300:240);
+       effects.push({type:'verityMine',x:clamp(player.x+Math.cos(aa)*rr,35,W-35),y:clamp(player.y+Math.sin(aa)*rr,35,H-35),r:30,life:1.35,damage:z.phase===2?38:28});
+     }
+     say('SMILE MINES');
+   }
+
+   // Reality Split: summon dangerous copies that disappear after a short time.
+   z.cloneTimer-=dt;
+   if(z.cloneTimer<=0){
+     z.cloneTimer=z.phase===2?7.5:10.5;
+     const n=z.phase===2?3:2;
+     spawnVerityMinions(z,z.phase===2?2:1);
+     for(let i=0;i<n;i++){
+       const c=makeZ(['Verity Echo','A fragile echo of Verity.','verityClone',55,78,44,'#dfff2f'],1,z.x+rand(-140,140),z.y+rand(-140,140));
+       c.clone=true;c.cloneLife=z.phase===2?8:6;c.hp=c.maxHp;
+       zombies.push(c);
+     }
+     say('REALITY SPLIT');
+   }
+ }
+ if(z.kind==='verityMinion' && z.ability<=0){
+   z.ability=2.8;
+   const aa=Math.atan2(player.y-z.y,player.x-z.x);
+   enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(aa)*260,vy:Math.sin(aa)*260,r:7,damage:12,life:2.4,homing:false});
+ }
+ if(z.kind==='doubtling' && z.shoot<=0){
+   z.shoot=1.7;
+   const aa=Math.atan2(player.y-z.y,player.x-z.x);
+   for(let i=-1;i<=1;i++){
+     const q=aa+i*.16; enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*240,vy:Math.sin(q)*240,r:6,damage:14,life:2.8,homing:true});
+   }
+ }
+ if(z.kind==='verityClone'&&z.clone){
+   z.cloneLife-=dt;
+   if(z.cloneLife<=0){z.dead=true;return}
+ }
+ if(z.kind==='boss'&&z.ability<=0){
+   z.ability=2.2;
+   const aa=Math.atan2(player.y-z.y,player.x-z.x);
+   for(let i=-2;i<=2;i++){const q=aa+i*.16;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*250,vy:Math.sin(q)*250,r:7,life:3,damage:13})}
+   enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(aa)*115,vy:Math.sin(aa)*115,r:10,life:5,damage:22,homing:true});
+   explode(clamp(player.x+rand(-100,100),30,W-30),clamp(player.y+rand(-100,100),30,H-30),20,100)
+ }
+ // NEW BOSS ROSTER — hard, readable attacks with different counterplay.
+ if(z.kind==='dreadnought'){
+   if(z.ability<=0){z.ability=3.0;z.charge=1.0;effects.push({type:'bossRing',x:z.x,y:z.y,r:40,max:260,life:.7,kind:z.kind});
+     for(let i=0;i<10;i++){const q=gameTime*.7+i*Math.PI*2/10;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*180,vy:Math.sin(q)*180,r:7,life:3.5,damage:14})}
+   }
+   if(z.charge>0)z.charge-=dt;
+ }
+ if(z.kind==='riftQueen'){
+   if(z.ability<=0){z.ability=3.7;z.x=clamp(player.x+rand(-300,300),70,W-70);z.y=clamp(player.y+rand(-220,220),70,H-70);
+     effects.push({type:'rift',x:z.x,y:z.y,r:70,life:3.5});
+     for(let i=0;i<4;i++){const t=zombieTypes.find(q=>q[2]==='void');if(t)zombies.push(makeZ(t,.9,z.x+rand(-60,60),z.y+rand(-60,60)))}
+     for(let i=0;i<6;i++){const q=Math.atan2(player.y-z.y,player.x-z.x)+rand(-.55,.55);enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*230,vy:Math.sin(q)*230,r:8,life:4,damage:17,homing:true})}
+   }
+ }
+ if(z.kind==='boneColossus'){
+   z.armor=Math.max(0,(z.armor||0)-dt);
+   if(z.ability<=0){z.ability=4.2;z.armor=1.8;effects.push({type:'bossRing',x:z.x,y:z.y,r:45,max:320,life:.9,kind:z.kind});
+     explode(z.x,z.y,28,145); for(let i=0;i<8;i++){const q=Math.random()*Math.PI*2;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*210,vy:Math.sin(q)*210,r:9,life:3.5,damage:16})}
+   }
+ }
+ if(z.kind==='chronoTyrant'){
+   if(z.ability<=0){z.ability=3.4;player.chronoSlow=.62;player.chronoSlowTime=2.5;effects.push({type:'chronoBoss',x:z.x,y:z.y,life:.8});
+     const aa=Math.atan2(player.y-z.y,player.x-z.x);for(let i=-3;i<=3;i++){const q=aa+i*.13;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*290,vy:Math.sin(q)*290,r:6,life:3.2,damage:15})}
+   }
+ }
+ if(z.kind==='swarmMother'){
+   if(z.ability<=0){z.ability=2.8;for(let i=0;i<3;i++){const t=zombieTypes.find(q=>q[2]==='fast');if(t)zombies.push(makeZ(t,.82,z.x+rand(-70,70),z.y+rand(-70,70)))}
+     effects.push({type:'eggNest',x:clamp(player.x+rand(-130,130),40,W-40),y:clamp(player.y+rand(-100,100),40,H-40),r:48,life:5.5})
+   }
+ }
+
+ // MEGA BOSSES — every one has a distinct, functional attack kit.
+ if(z.kind.startsWith('megaBoss')){
+   const hpRatio=z.hp/z.maxHp;
+   if(z.kind==='megaBoss0'){ // Titan Maw: charge + expanding devour shockwave
+     if(z.ability<=0){z.ability=3.2;z.charge=1.15;z.mawPulse=0;
+       effects.push({type:'bossRing',x:z.x,y:z.y,r:35,max:310,life:.8,kind:z.kind});
+       for(let i=0;i<12;i++){const q=Math.random()*Math.PI*2;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*150,vy:Math.sin(q)*150,r:8,life:3.2,damage:15,maw:true})}
+     }
+     if(z.charge>0){z.charge-=dt;if(z.charge<=0){explode(z.x,z.y,42,125);effects.push({type:'bossRing',x:z.x,y:z.y,r:20,max:390,life:.65,kind:z.kind})}}
+   }
+   if(z.kind==='megaBoss1'){ // Plasma Warden: rotating rings + plasma mines
+     if(z.ability<=0){z.ability=3.0;z.plasmaSpin=(z.plasmaSpin||0)+.9;
+       for(let i=0;i<14;i++){const q=z.plasmaSpin+i*Math.PI*2/14;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*230,vy:Math.sin(q)*230,r:7,life:3.2,damage:16,plasma:true})}
+       for(let i=0;i<3;i++){const x=clamp(player.x+rand(-150,150),35,W-35),y=clamp(player.y+rand(-110,110),35,H-35);effects.push({type:'plasmaMine',x,y,r:52,life:1.5,damage:30})}
+     }
+   }
+   if(z.kind==='megaBoss2'){ // Grave Weaver: web lattice + bone summons
+     if(z.ability<=0){z.ability=3.5;
+       for(let i=-2;i<=2;i++){const q=a+i*.2;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*175,vy:Math.sin(q)*175,r:10,life:3.5,damage:10,web:true})}
+       for(let i=0;i<2;i++){const t=zombieTypes.find(q=>q[2]==='necro')||zombieTypes[0];zombies.push(makeZ(t,.85,z.x+rand(-80,80),z.y+rand(-80,80)))}
+       effects.push({type:'webBurst',x:z.x,y:z.y,r:80,life:.5})
+     }
+   }
+   if(z.kind==='megaBoss3'){ // Storm Hydra: rotating 3-head crossfire + lightning strikes
+     if(z.ability<=0){z.ability=2.5;z.hydraSpin=(z.hydraSpin||0)+.45;
+       for(let h=0;h<3;h++){const q=z.hydraSpin+h*Math.PI*2/3;for(let j=-1;j<=1;j++){const aa=q+j*.08;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(aa)*310,vy:Math.sin(aa)*310,r:6,life:2.8,damage:13,lightning:true})}}
+       const sx=clamp(player.x+rand(-80,80),35,W-35),sy=clamp(player.y+rand(-80,80),35,H-35);effects.push({type:'hydraStrike',x:sx,y:sy,r:62,life:1.0,damage:34})
+     }
+   }
+   if(z.kind==='megaBoss4'){ // Blight Engine: spreading toxic fields + infected missiles
+     if(z.ability<=0){z.ability=2.9;
+       effects.push({type:'acidPool',x:z.x,y:z.y,r:72,life:5.2,damage:18});
+       for(let i=0;i<5;i++){const q=a+rand(-.65,.65);enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*145,vy:Math.sin(q)*145,r:9,life:5,damage:20,homing:true,blight:true})}
+     }
+   }
+   if(z.kind==='megaBoss5'){ // Iron Phantom: vanish, teleport behind player, burst
+     if(z.ability<=0){z.ability=4.0;z.phantomPhase=.75;z.burrowed=true;z.spawn=0;
+       setTimeout(()=>{},0);
+       z.x=clamp(player.x-Math.cos(a)*260,40,W-40);z.y=clamp(player.y-Math.sin(a)*260,40,H-40);
+       for(let i=0;i<8;i++){const q=Math.atan2(player.y-z.y,player.x-z.x)+rand(-.55,.55);enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*330,vy:Math.sin(q)*330,r:7,life:2.4,damage:18,phantom:true})}
+       effects.push({type:'phantomBurst',x:z.x,y:z.y,r:30,life:.6})
+     }
+     if(z.burrowed){z.phantomPhase-=dt;if(z.phantomPhase<=0){z.burrowed=false;z.spawn=1}}
+   }
+   if(z.kind==='megaBoss6'){ // Solar Reaper: telegraphed solar beam + burning safe-zone denial
+     if(z.ability<=0){z.ability=3.6;z.beamAngle=a;
+       effects.push({type:'verityBeam',x:z.x,y:z.y,angle:a,life:1.4,telegraph:.65,width:30,damage:46,solar:true});
+       for(let i=0;i<4;i++){const q=Math.random()*Math.PI*2,rr=rand(100,270);effects.push({type:'firePool',x:clamp(player.x+Math.cos(q)*rr,35,W-35),y:clamp(player.y+Math.sin(q)*rr,35,H-35),r:38,life:3.5,damage:16})}
+     }
+   }
+   if(z.kind==='megaBoss7'){ // Frost Titan: shard storm + freezing ring
+     if(z.ability<=0){z.ability=3.0;
+       for(let i=0;i<16;i++){const q=Math.random()*Math.PI*2;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*200,vy:Math.sin(q)*200,r:8,life:3.5,damage:15,freeze:true})}
+       effects.push({type:'frostRing',x:z.x,y:z.y,r:45,max:300,life:1.0});
+       if(d<300){player.moveMult=.48;player.frostTime=1.3;damagePlayer(18,'frostTitan')}
+     }
+   }
+   if(z.kind==='megaBoss8'){ // Rage Core: enrage at low HP + violent spiral
+     if(hpRatio<.55)z.enraged=true;
+     if(z.ability<=0){z.ability=z.enraged?1.55:2.8;z.rageSpin=(z.rageSpin||0)+.6;
+       const n=z.enraged?18:10;for(let i=0;i<n;i++){const q=z.rageSpin+i*Math.PI*2/n;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)* (z.enraged?300:220),vy:Math.sin(q)*(z.enraged?300:220),r:7,life:3,damage:z.enraged?20:14,rage:true})}
+       if(z.enraged)explode(z.x,z.y,24,100);
+     }
+   }
+   if(z.kind==='megaBoss9'){ // Void Emperor: collapsing rifts + void spear fan
+     if(z.ability<=0){z.ability=3.1;
+       for(let i=0;i<3;i++){const x=clamp(player.x+rand(-220,220),45,W-45),y=clamp(player.y+rand(-160,160),45,H-45);effects.push({type:'rift',x,y,r:78,life:4.5,voidBoss:true})}
+       for(let i=-3;i<=3;i++){const q=a+i*.18;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*260,vy:Math.sin(q)*260,r:8,life:4,damage:19,voidSpear:true,homing:true})}
+     }
+   }
+   if(z.kind==='megaBoss10'){ // Hive Queen: nest network + hunter drone swarm
+     if(z.ability<=0){z.ability=2.6;
+       for(let i=0;i<2;i++)effects.push({type:'eggNest',x:clamp(player.x+rand(-190,190),45,W-45),y:clamp(player.y+rand(-140,140),45,H-45),r:50,life:7});
+       const drone=zombieTypes.find(q=>q[2]==='fast');if(drone)for(let i=0;i<4;i++)zombies.push(makeZ(drone,.95,z.x+rand(-100,100),z.y+rand(-100,100)));
+     }
+   }
+   if(z.kind==='megaBoss11'){ // Clockwork Judge: timed zones + synchronized execution volley
+     if(z.ability<=0){z.ability=3.8;
+       const marks=[0,1,2].map(()=>({x:clamp(player.x+rand(-170,170),40,W-40),y:clamp(player.y+rand(-120,120),40,H-40)}));
+       for(const m of marks)effects.push({type:'clockMark',x:m.x,y:m.y,r:48,life:1.7,damage:38});
+       for(let i=0;i<12;i++){const q=a+i*Math.PI*2/12;enemyBullets.push({x:z.x,y:z.y,vx:Math.cos(q)*280,vy:Math.sin(q)*280,r:6,life:3,damage:14,clock:true})}
+       if(d<420){player.chronoSlow=.72;player.chronoSlowTime=1.6}
+     }
+   }
+ }
+ if(z.kind==='screamer'&&z.hp<z.maxHp*.4&&z.ability<=0){z.ability=99;for(let i=0;i<4;i++){const t=zombieTypes[1];zombies.push(makeZ(t,.7,z.x+rand(-20,20),z.y+rand(-20,20)))}}
+ let sp=z.speed*(1-player.enemySlow)*(z.slow>0?.45:1)*(z.stun>0?0:1);
+ if(z.kind==='verity')sp*=z.phase===2?1.22:1;
+ if(z.kind==='dreadnought'&&z.charge>0)sp*=3.1;
+  if(z.kind.startsWith('megaBoss')&&z.charge>0)sp*=3.2;
+ if(z.kind==='riftQueen')sp*=.82;
+ if(z.kind==='boneColossus')sp*=.8;
+ if(z.kind==='chronoTyrant')sp*=1.05;
+ if(z.kind==='swarmMother')sp*=.95;
+ if(z.kind==='verityClone')sp*=1.05;
+ if(z.kind==='verityMinion')sp*=1.08;
+ if(z.kind==='doubtling' && d<260)sp*=-.32;
+  if(z.behavior==='charger'&&z.charge>0)sp*=3.4;
+  if(z.behavior==='sprinter'&&z.special)sp*=2.0;
+  if(z.behavior==='sniper'||z.behavior==='shotgunner'||z.behavior==='freezer')if(d<240)sp*=-.35;
+  if(z.behavior==='shield'&&z.armorTimer>0)z.armor=1.8;else if(z.behavior==='shield')z.armor=0;
+  if(z.behavior==='vortex')sp*=.82;
+ if(z.kind==='mimic'&&!z.mimicAwake)sp=0;
+ if(z.buffTimer>0){z.buffTimer-=dt;sp*=1.28;}
+ if(z.kind==='mirrorClone')sp*=1.12;
+ if(z.kind==='ice'&&d<100)sp*=.65;
+ if(z.kind==='rammer'&&z.charge>0){z.charge-=dt;sp*=3}
+ if(z.kind==='turret')sp=0;
+ if(z.kind==='shooter'||z.kind==='spitter'||z.kind==='shardling')if(d<230)sp*=-.25;
+ if(z.kind==='cloaked'&&d>180)sp*=.8;
+ z.x+=Math.cos(a)*sp*dt;z.y+=Math.sin(a)*sp*dt;
+ if(z.kind==='toxic'&&d<85)damagePlayer(4*dt,'toxic');
+ if(z.kind==='ice'&&d<105)player.moveMult=.82;
+ if(z.kind==='volt'&&d<110)damagePlayer(5*dt,'volt');
+ if(z.kind==='burner'&&d<70)damagePlayer(7*dt,'burn');
+ if(z.kind==='vampire'&&d<40){damagePlayer(9*dt,'vamp');z.hp=clamp(z.hp+5*dt,0,z.maxHp)}
+ if(z.kind==='plague'&&d<70)damagePlayer(6*dt,'plague');
+ if(z.kind==='shield'&&d<40)damagePlayer(10*dt,'shield');
+ if(isBossKind(z.kind)&&z.kind!=='verity'&&d<75)damagePlayer(22*dt,'boss');
+ if(z.kind==='verity'&&d<95)damagePlayer((z.phase===2?30:24)*dt,'verity');
+ if(z.kind==='verityClone'&&d<55)damagePlayer(15*dt,'verityEcho');
+ if(z.kind==='verityMinion'&&d<50)damagePlayer(12*dt,'verityMinion');
+}
+function update(dt){
+ player.damageFlash=Math.max(0,player.damageFlash-dt);
+ gameTime+=dt;
+ player.anim+=dt;
+ player.recoil=Math.max(0,player.recoil-dt*7);
+ player.flash=Math.max(0,player.flash-dt*8);
+ if(!running||paused||gameOver)return;
+ player.moveMult=1;
+ if(player.frostTime>0){player.frostTime-=dt;if(player.frostTime<=0)player.moveMult=1}
+ if(player.chronoSlowTime>0){player.chronoSlowTime-=dt;if(player.chronoSlowTime<=0)player.chronoSlow=1}
+ if(player.webSlowTime>0)player.webSlowTime-=dt;
+ if(player.enemyPoisonTime>0){player.enemyPoisonTime-=dt;damagePlayer((1.8*player.enemyPoisonStacks)*dt,'plaguePoison');if(player.enemyPoisonTime<=0)player.enemyPoisonStacks=0}
+ let dx=(keys.d?1:0)+(keys.a?-1:0)+(keys.arrowright?1:0)+(keys.arrowleft?-1:0);
+ let dy=(keys.s?1:0)+(keys.w?-1:0)+(keys.arrowdown?1:0)+(keys.arrowup?-1:0);
+ if(dx||dy){player.moveAnim+=dt;const l=Math.hypot(dx,dy);const webMult=player.webSlowTime>0?.7:1;player.x+=dx/l*player.speed*player.moveMult*player.moveMult*dt*player.speedMult*webMult;player.y+=dy/l*player.speed*player.moveMult*player.moveMult*dt*player.speedMult*webMult}
+ player.x=clamp(player.x,player.r,W-player.r);player.y=clamp(player.y,player.r,H-player.r);
+ player.angle=Math.atan2(mouse.y-player.y,mouse.x-player.x);
+ if(keys[' ']||mouse.down)shoot();
+ if(player.healLock>0)player.healLock-=dt; else if(player.regen)player.hp=clamp(player.hp+player.regen*dt,0,player.maxHp);
+ if(player.shieldMax&&player.shield<player.shieldMax)player.shield=clamp(player.shield+player.shieldRegen*dt,0,player.shieldMax);
+ if(player.lightning){player.lightningTimer-=dt;if(player.lightningTimer<=0){player.lightningTimer=2;const z=zombies[Math.floor(Math.random()*zombies.length)];if(z){hurtZombie(z,player.damage*5,{vx:1,vy:0});effects.push({type:'bolt',x:z.x,y:z.y,life:.25})}}}
+ if(player.meteor){player.meteorTimer-=dt;if(player.meteorTimer<=0){player.meteorTimer=5;for(let i=0;i<(player.meteor3?3:1);i++){const x=rand(50,W-50),y=rand(50,H-50);explode(x,y,player.damage*7,95)}}}
+ if(player.nova){player.novaTimer-=dt;if(player.novaTimer<=0){player.novaTimer=7;for(const z of zombies)if(dist(player.x,player.y,z.x,z.y)<220){z.slow=4;z.stun=.6}effects.push({type:'blast',x:player.x,y:player.y,r:10,max:220,life:.5})}}
+ if(player.orbital){for(let i=0;i<player.orbital*2;i++){const a=performance.now()/700+i*Math.PI/player.orbital;const x=player.x+Math.cos(a)*player.orbitRange,y=player.y+Math.sin(a)*player.orbitRange;for(const z of zombies)if(!z.dead&&dist(x,y,z.x,z.y)<z.r+9)z.hp-=player.orbitDamage*dt}}
+ for(const b of bullets){
+  if(player.homing){const near=zombies.filter(z=>!z.dead).sort((a,c)=>dist(b.x,b.y,a.x,a.y)-dist(b.x,b.y,c.x,c.y))[0];if(near){const a=Math.atan2(near.y-b.y,near.x-b.x),v=Math.hypot(b.vx,b.vy);b.vx+=(Math.cos(a)*v-b.vx)*.08;b.vy+=(Math.sin(a)*v-b.vy)*.08}}
+  b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
+  if((b.x<0||b.x>W)&&(b.bounces>0)){b.vx*=-1;b.bounces--}
+  if((b.y<0||b.y>H)&&(b.bounces>0)){b.vy*=-1;b.bounces--}
+  if(b.x<-40||b.x>W+40||b.y<-40||b.y>H+40)b.life=0;
+  for(const z of zombies){
+   if(z.dead||b.hit.has(z))continue;
+   if(dist(b.x,b.y,z.x,z.y)<b.r+z.r){b.hit.add(z);hurtZombie(z,b.damage,b);b.pierce--;if(b.pierce<0)b.life=0;break}
+  }
+ }
+ bullets=bullets.filter(b=>b.life>0);
+ for(const z of zombies){z.anim+=dt;z.hit=Math.max(0,z.hit-dt);z.flash=Math.max(0,z.flash-dt);z.spawn=Math.min(1,z.spawn+dt*3)}
+ for(const z of zombies)enemyAI(z,dt);
+ for(const eb of enemyBullets){
+  if(eb.homing){const a=Math.atan2(player.y-eb.y,player.x-eb.x),v=Math.hypot(eb.vx,eb.vy);eb.vx+=(Math.cos(a)*v-eb.vx)*.025;eb.vy+=(Math.sin(a)*v-eb.vy)*.025}
+  eb.x+=eb.vx*dt;eb.y+=eb.vy*dt;eb.life-=dt;
+  if(dist(eb.x,eb.y,player.x,player.y)<eb.r+player.r){damagePlayer(eb.damage||10);eb.life=0;if(eb.web)player.webSlowTime=1.25;if(eb.freeze){player.moveMult=.5;player.frostTime=1.0}if(eb.blight){player.enemyPoisonStacks=Math.min(6,player.enemyPoisonStacks+1);player.enemyPoisonTime=3.5}}
+ }
+ enemyBullets=enemyBullets.filter(b=>b.life>0&&b.x>-80&&b.x<W+80&&b.y>-80&&b.y<H+80);
+ for(const z of zombies)if(!z.dead&&dist(z.x,z.y,player.x,player.y)<z.r+player.r)damagePlayer((z.kind==='tank'||z.kind==='juggernaut'||z.kind==='acidTank'?18:8)*dt,'contact');
+ for(const z of zombies)if(z.hp<=0)killZombie(z);
+ zombies=zombies.filter(z=>!z.dead);
+ for(const e of effects){
+   e.life-=dt;
+   if(e.type==='pool'&&dist(e.x,e.y,player.x,player.y)<e.r)damagePlayer(8*dt);if((e.type==='eggNest'||e.type==='rift')&&dist(e.x,e.y,player.x,player.y)<e.r)damagePlayer(e.type==='eggNest'?7*dt:6*dt,'bossZone');
+   if((e.type==='firePool'||e.type==='acidPool')&&dist(e.x,e.y,player.x,player.y)<e.r)damagePlayer(e.damage*dt,e.type);
+   if(e.type==='plasmaMine'&&dist(e.x,e.y,player.x,player.y)<e.r){damagePlayer(e.damage*dt,'plasmaMine');}
+   if(e.type==='hydraStrike'&&e.life<.38&&dist(e.x,e.y,player.x,player.y)<e.r){damagePlayer(e.damage*dt,'hydraStrike');}
+   if(e.type==='clockMark'&&e.life<.42&&dist(e.x,e.y,player.x,player.y)<e.r){damagePlayer(e.damage*dt,'clockJudge');}
+   if(e.type==='frostRing'&&dist(e.x,e.y,player.x,player.y)<e.r+(1-e.life)*255){player.moveMult=Math.min(player.moveMult,.55);}
+   if(e.type==='chainZap'){}
+   if(e.type==='verityBeam'){
+     if(e.life<1.15-e.telegraph){
+       const dx=player.x-e.x,dy=player.y-e.y;
+       const along=dx*Math.cos(e.angle)+dy*Math.sin(e.angle);
+       const side=Math.abs(dx*Math.sin(e.angle)-dy*Math.cos(e.angle));
+       if(along>0&&along<1200&&side<e.width)damagePlayer(e.damage*dt,'truthRay');
+     }
+   }
+   if(e.type==='verityMine'&&e.life<=0){
+     if(dist(e.x,e.y,player.x,player.y)<e.r+player.r)damagePlayer(e.damage,'smileMine');
+     effects.push({type:'blast',x:e.x,y:e.y,r:5,max:e.r*2.6,life:.35,verity:true});
+   }
+ }
+ effects=effects.filter(e=>e.life>0);
+ for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.96;p.vy*=.96;p.life-=dt}particles=particles.filter(p=>p.life>0);
+ for(const t of texts){t.y-=25*dt;t.life-=dt}texts=texts.filter(t=>t.life>0);
+ if(zombies.length===0&&!waveCleared){waveCleared=true;chooseCards()}
+ updateHud();
+}
+
+function limb(x1,y1,x2,y2,w,fill){
+ ctx.strokeStyle=fill;ctx.lineWidth=w;ctx.lineCap='round';
+ ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+}
+
+function drawZombie(z){
+ const t=gameTime+z.anim;
+ const bob=Math.sin(t*5)*(z.kind==='tank'||z.kind==='juggernaut'||z.kind==='acidTank'?1.2:2.5);
+ const walk=Math.sin(t*9)*(z.kind==='turret'?0:1);
+ const pulse=1+Math.sin(t*4)*.045;
+ const d=dist(z.x,z.y,player.x,player.y);
+ let alpha=z.kind==='cloaked'&&d>170?.12:1;
+ if(z.kind==='megaBoss5'&&z.burrowed)alpha=.08;
+ if(z.kind==='burrower' && z.spawn<.7) alpha*=z.spawn;
+ ctx.save();
+ ctx.translate(z.x,z.y+bob);
+ ctx.globalAlpha=alpha;
+ ctx.scale(pulse,pulse);
+
+ // Ground shadow
+ ctx.globalAlpha*=.25;
+ ctx.fillStyle='#000';
+ ctx.beginPath();ctx.ellipse(0,z.r*.82,z.r*.85,z.r*.28,0,0,Math.PI*2);ctx.fill();
+ ctx.globalAlpha=alpha;
+
+ const body=z.col, dark='#111722', skin='#d9d2bd', glow=z.col;
+ const isBig=['tank','juggernaut','acidTank','boss','verity'].includes(z.kind);
+ const legSwing=walk*(isBig?.55:1);
+
+ // Animated legs / silhouette
+ if(!['turret','void','verity','verityClone'].includes(z.kind)){
+   limb(-z.r*.28,z.r*.35,-z.r*.32+legSwing*3,z.r*.82,Math.max(4,z.r*.22),dark);
+   limb(z.r*.28,z.r*.35,z.r*.32-legSwing*3,z.r*.82,Math.max(4,z.r*.22),dark);
+ }
+
+ // Special silhouettes
+ if(z.kind==='runner'||z.kind==='leaper'||z.kind==='rammer'){
+   ctx.rotate(Math.sin(t*5)*.035);
+   limb(-z.r*.55,0,-z.r*1.15,walk*6,Math.max(4,z.r*.2),body);
+   limb(z.r*.55,0,z.r*1.15,-walk*6,Math.max(4,z.r*.2),body);
+   ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(0,0,z.r*.72,z.r,0,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle=skin;ctx.beginPath();ctx.arc(z.r*.05,-z.r*.65,z.r*.48,0,Math.PI*2);ctx.fill();
+ } else if(z.kind==='tank'||z.kind==='juggernaut'||z.kind==='acidTank'){
+   ctx.fillStyle=body;ctx.beginPath();ctx.roundRect(-z.r*.82,-z.r*.65,z.r*1.64,z.r*1.45,7);ctx.fill();
+   ctx.fillStyle='#26303b';ctx.fillRect(-z.r*.55,-z.r*.35,z.r*1.1,z.r*.28);
+   ctx.strokeStyle='#657384';ctx.lineWidth=4;ctx.strokeRect(-z.r*.7,-z.r*.55,z.r*1.4,z.r*1.15);
+   ctx.fillStyle=skin;ctx.beginPath();ctx.arc(0,-z.r*.48,z.r*.52,0,Math.PI*2);ctx.fill();
+ } else if(z.kind==='ice'||z.kind==='shardling'){
+   ctx.fillStyle=body;ctx.beginPath();
+   for(let i=0;i<8;i++){const a=i*Math.PI/4-Math.PI/8,r=z.r*(i%2?.72:1.05);const x=Math.cos(a)*r,y=Math.sin(a)*r; i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+   ctx.closePath();ctx.fill();
+   ctx.strokeStyle='#d7fbff';ctx.lineWidth=2;
+   for(let i=0;i<5;i++){const a=i*1.256+t*.15;ctx.beginPath();ctx.moveTo(Math.cos(a)*z.r*.65,Math.sin(a)*z.r*.65);ctx.lineTo(Math.cos(a)*(z.r+8),Math.sin(a)*(z.r+8));ctx.stroke()}
+ } else if(z.kind==='verity'){
+   // Verity itself uses ONLY the exact uploaded artwork. No extra face is drawn over it.
+   const s=z.r*2;
+   if(verityImg.complete){
+     ctx.globalAlpha=alpha;ctx.shadowBlur=28;ctx.shadowColor='#efff00';
+     ctx.drawImage(verityImg,-z.r,-z.r,s,s);ctx.shadowBlur=0;
+   }
+   ctx.globalAlpha=alpha;
+   ctx.strokeStyle=z.phase===2?'#fff':'#efff00';ctx.lineWidth=4+Math.sin(t*7)*1.5;
+   ctx.beginPath();ctx.arc(0,0,z.r+10+Math.sin(t*5)*4,0,Math.PI*2);ctx.stroke();
+   if(z.phase===2){ctx.strokeStyle='#ff5c8a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,z.r+19,0,Math.PI*2);ctx.stroke();}
+ } else if(z.kind==='verityClone'){
+   // Echoes are abstract copies, not extra faces.
+   ctx.globalAlpha=alpha*.55;ctx.fillStyle='#dfff2f';ctx.beginPath();ctx.arc(0,0,z.r,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,z.r+6,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=alpha;
+ } else if(z.kind==='verityMinion'){
+   // Truthling: sharp yellow creature with no face overlay.
+   ctx.fillStyle='#eaff3f';ctx.beginPath();ctx.moveTo(0,-z.r);ctx.lineTo(z.r*.82,0);ctx.lineTo(0,z.r);ctx.lineTo(-z.r*.82,0);ctx.closePath();ctx.fill();
+   ctx.strokeStyle='#fff8a8';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-z.r*.55,0);ctx.lineTo(z.r*.55,0);ctx.stroke();
+ } else if(z.kind==='doubtling'){
+   // Doubtling: green orb that keeps its distance and launches shards.
+   ctx.fillStyle='#cfff45';ctx.beginPath();ctx.arc(0,0,z.r*.9,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle='#f5ff9b';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,z.r+5,t*.7,t*.7+4.5);ctx.stroke();
+ } else if(z.kind==='mimic'&&!z.mimicAwake){
+   // A sleeping Mimic is a harmless-looking pickup chest until you get close.
+   ctx.fillStyle='#a8753f';ctx.fillRect(-z.r*.9,-z.r*.55,z.r*1.8,z.r*1.2);
+   ctx.fillStyle='#d7a34e';ctx.fillRect(-z.r*.9,-z.r*.08,z.r*1.8,z.r*.2);
+   ctx.fillStyle='#f5d06a';ctx.fillRect(-4,-2,8,8);
+ } else if(z.kind==='dreadnought'){
+   ctx.fillStyle=body;ctx.beginPath();ctx.roundRect(-z.r*.9,-z.r*.72,z.r*1.8,z.r*1.5,10);ctx.fill();
+   ctx.fillStyle='#303944';ctx.fillRect(-z.r*.55,-z.r*.5,z.r*1.1,z.r*.22);
+   ctx.fillStyle='#ffb04d';ctx.fillRect(-z.r*.7,-z.r*.2,z.r*1.4,7);
+   ctx.strokeStyle='#e7a46d';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(-z.r*.9,0);ctx.lineTo(-z.r*1.25,0);ctx.moveTo(z.r*.9,0);ctx.lineTo(z.r*1.25,0);ctx.stroke();
+ } else if(z.kind==='riftQueen'){
+   ctx.fillStyle=body;ctx.beginPath();ctx.arc(0,0,z.r*.75,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle='#d9b5ff';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,z.r+8,t,t+4.8);ctx.stroke();
+   for(let i=0;i<6;i++){const q=t+i*Math.PI/3;ctx.fillStyle='#d8b2ff';ctx.beginPath();ctx.moveTo(Math.cos(q)*z.r*.65,Math.sin(q)*z.r*.65);ctx.lineTo(Math.cos(q)*z.r*1.25,Math.sin(q)*z.r*1.25);ctx.lineTo(Math.cos(q+.15)*z.r*.65,Math.sin(q+.15)*z.r*.65);ctx.fill();}
+ } else if(z.kind==='boneColossus'){
+   ctx.fillStyle=body;ctx.beginPath();ctx.roundRect(-z.r*.78,-z.r*.72,z.r*1.56,z.r*1.45,14);ctx.fill();
+   ctx.strokeStyle='#f4e7bd';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(-z.r*.7,-z.r*.2);ctx.lineTo(z.r*.7,-z.r*.2);ctx.moveTo(-z.r*.55,.25*z.r);ctx.lineTo(z.r*.55,.25*z.r);ctx.stroke();
+   if(z.armor>0){ctx.strokeStyle='#fff3c4';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,z.r+7,0,Math.PI*2);ctx.stroke();}
+ } else if(z.kind==='chronoTyrant'){
+   ctx.fillStyle=body;ctx.beginPath();ctx.arc(0,0,z.r*.78,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle='#f1d8ff';ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,z.r+7,t,t+5.4);ctx.stroke();
+   for(let i=0;i<8;i++){const q=i*Math.PI/4;ctx.fillStyle='#f0d4ff';ctx.fillRect(Math.cos(q)*z.r*.45-2,Math.sin(q)*z.r*.45-2,4,4);}
+ } else if(z.kind==='swarmMother'){
+   ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(0,0,z.r*.9,z.r*.72,0,0,Math.PI*2);ctx.fill();
+   for(let i=0;i<5;i++){const q=-1+i*.5;ctx.fillStyle='#d9ff9a';ctx.beginPath();ctx.arc(Math.cos(q)*z.r*.55,Math.sin(q)*z.r*.55,5,0,Math.PI*2);ctx.fill();}
+   ctx.strokeStyle='#b8e67b';ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,z.r+8,t,t+4.5);ctx.stroke();
+ } else if(z.kind==='boss'){
+   ctx.fillStyle=body;ctx.beginPath();ctx.arc(0,0,z.r,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle='#4b111d';ctx.beginPath();ctx.moveTo(-z.r*.65,-z.r*.35);ctx.lineTo(-z.r*1.05,-z.r*1.05);ctx.lineTo(-z.r*.25,-z.r*.7);ctx.closePath();ctx.fill();
+   ctx.beginPath();ctx.moveTo(z.r*.65,-z.r*.35);ctx.lineTo(z.r*1.05,-z.r*1.05);ctx.lineTo(z.r*.25,-z.r*.7);ctx.closePath();ctx.fill();
+ } else if(z.kind==='void'){
+   ctx.fillStyle='#1a0928';ctx.beginPath();ctx.arc(0,0,z.r,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle='#9c5cff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,z.r+7+Math.sin(t*4)*3,t*.8,t*.8+5.2);ctx.stroke();
+   ctx.fillStyle='#050008';ctx.beginPath();ctx.arc(0,0,z.r*.48,0,Math.PI*2);ctx.fill();
+ } else {
+   // Classic zombie body + head, with animated arms.
+   limb(-z.r*.62,0,-z.r*1.08+walk*2,-z.r*.18,Math.max(4,z.r*.2),body);
+   limb(z.r*.62,0,z.r*1.08-walk*2,-z.r*.12,Math.max(4,z.r*.2),body);
+   ctx.fillStyle=body;ctx.beginPath();ctx.ellipse(0,z.r*.15,z.r*.72,z.r*.72,0,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle=skin;ctx.beginPath();ctx.arc(0,-z.r*.52,z.r*.56,0,Math.PI*2);ctx.fill();
+ }
+
+ // Costume-specific equipment
+ if(z.kind==='shooter'){
+   ctx.fillStyle='#25202f';ctx.fillRect(z.r*.05,-4,z.r+16,8);
+   ctx.fillStyle='#d7a2ff';ctx.fillRect(z.r*.65,-6,8,12);
+   ctx.fillStyle='#5c436f';ctx.fillRect(-z.r*.72,-z.r*.1,z.r*.4,z.r*.72);
+ }
+ if(z.kind==='spitter'||z.kind==='plague'){
+   ctx.fillStyle='#25351d';ctx.fillRect(-z.r*.5,z.r*.1,z.r,z.r*.5);
+   ctx.fillStyle='#baff61';ctx.beginPath();ctx.arc(z.r*.45,-z.r*.55,3+Math.sin(t*7),0,Math.PI*2);ctx.fill();
+ }
+ if(z.kind==='shield'){
+   ctx.fillStyle='#4c5b6e';ctx.fillRect(-z.r*.7,-z.r*.9,z.r*1.4,z.r*1.8);
+   ctx.strokeStyle='#a8f4ff';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,z.r+8,-1.25,1.25);ctx.stroke();
+ }
+ if(z.kind==='bomber'){
+   ctx.strokeStyle='#ffb03b';ctx.lineWidth=4+Math.sin(t*10)*1.5;ctx.beginPath();ctx.arc(0,0,z.r+8+Math.sin(t*8)*3,0,Math.PI*2);ctx.stroke();
+   ctx.fillStyle='#ff5b38';ctx.beginPath();ctx.arc(0,0,4+Math.sin(t*12)*1.5,0,Math.PI*2);ctx.fill();
+ }
+ if(z.kind==='volt'||z.kind==='chain'){
+   ctx.strokeStyle='#d6a5ff';ctx.lineWidth=2;ctx.beginPath();
+   for(let i=0;i<9;i++){const a=t*1.5+i*Math.PI*2/9;const rr=z.r+5+Math.sin(t*9+i)*3;ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}
+   ctx.stroke();
+ }
+ if(z.kind==='howler'){
+   ctx.fillStyle='#fff1b8';ctx.fillRect(-5,-z.r-12,10,12);
+   ctx.strokeStyle='#fff1b8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-z.r-4,15+Math.sin(t*5)*4,Math.PI*1.15,Math.PI*1.85);ctx.stroke();
+ }
+ if(z.kind==='webber'){
+   ctx.strokeStyle='#eee';ctx.lineWidth=1.5;
+   for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*(z.r+9),Math.sin(a)*(z.r+9));ctx.stroke()}
+   ctx.beginPath();ctx.arc(0,0,z.r+7,0,Math.PI*2);ctx.stroke();
+ }
+ if(z.kind==='firefly'){
+   ctx.fillStyle='#ffe86b';ctx.shadowBlur=18;ctx.shadowColor='#ffe86b';ctx.beginPath();ctx.arc(0,0,z.r*.65,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+   ctx.strokeStyle='#fff2a0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-z.r,-z.r*.5);ctx.lineTo(-z.r*1.7,-z.r);ctx.moveTo(z.r,-z.r*.5);ctx.lineTo(z.r*1.7,-z.r);ctx.stroke();
+ }
+ if(z.kind==='necromancer'){
+   ctx.fillStyle='#171025';ctx.fillRect(-z.r*.75,-z.r*.95,z.r*1.5,z.r*.55);
+   ctx.strokeStyle='#a678ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,z.r+6,0,Math.PI*2);ctx.stroke();
+ }
+ if(z.kind==='chrono'){
+   ctx.strokeStyle='#e7c6ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,z.r+8,-t,t+2.2);ctx.stroke();
+   ctx.fillStyle='#e7c6ff';ctx.fillRect(-2,-z.r*.65,4,z.r*.65);
+ }
+ if(z.kind==='mimic'){
+   ctx.strokeStyle='#f4d59b';ctx.lineWidth=4;ctx.strokeRect(-z.r*.65,-z.r*.65,z.r*1.3,z.r*1.3);
+   ctx.fillStyle='#1a1510';ctx.fillRect(-z.r*.3,-2,8,4);ctx.fillRect(z.r*.05,-2,8,4);
+ }
+ if(z.kind==='screamer'){
+   ctx.fillStyle='#181818';ctx.beginPath();ctx.ellipse(0,z.r*.1,z.r*.35,z.r*.55,0,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle='#f1f1f1';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,z.r+7+Math.sin(t*7)*2,0,Math.PI*2);ctx.stroke();
+ }
+ if(z.kind==='graviton'){
+   ctx.strokeStyle='#6e8cff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,z.r+10+Math.sin(t*3)*5,t,t+4.5);ctx.stroke();
+ }
+ if(z.kind==='rammer'){
+   ctx.fillStyle='#ef8d5d';ctx.beginPath();ctx.moveTo(0,-z.r*1.15);ctx.lineTo(z.r*.45,-z.r*.55);ctx.lineTo(-z.r*.45,-z.r*.55);ctx.closePath();ctx.fill();
+ }
+ if(z.kind==='acidTank'){
+   ctx.fillStyle='#aaff54';ctx.beginPath();ctx.arc(-z.r*.38,-z.r*.45,5+Math.sin(t*5)*2,0,Math.PI*2);ctx.arc(z.r*.4,-z.r*.25,4+Math.sin(t*6)*2,0,Math.PI*2);ctx.fill();
+ }
+ if(z.kind==='rocket'){
+   ctx.fillStyle='#4d1e28';ctx.fillRect(-z.r*.2,-z.r*.7,z.r*.4,z.r*1.5);
+   ctx.fillStyle='#ff914d';ctx.beginPath();ctx.moveTo(0,z.r*1.25);ctx.lineTo(-5,z.r*.55);ctx.lineTo(5,z.r*.55);ctx.closePath();ctx.fill();
+ }
+ if(z.kind==='burrower'){
+   ctx.strokeStyle='#c99a62';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,z.r*.8,t,t+Math.PI*1.5);ctx.stroke();
+ }
+ if(z.kind==='blinker'){
+   ctx.globalAlpha*=.55+.45*Math.abs(Math.sin(t*7));
+   ctx.strokeStyle='#9ba6ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,z.r+7,0,Math.PI*2);ctx.stroke();
+ }
+ if(z.kind==='cloaked'){
+   ctx.strokeStyle='#aab4c4';ctx.setLineDash([3,4]);ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,z.r+5,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+ }
+
+ // Face: eyes track the player and blink occasionally.
+ if(z.kind==='burrower'&&z.burrowed){ctx.globalAlpha=0;ctx.restore();return;}
+ const look=Math.atan2(player.y-z.y,player.x-z.x);
+ const ex=Math.cos(look)*z.r*.12, ey=Math.sin(look)*z.r*.12;
+ const blink=(Math.sin(t*1.7)>0.96);
+ ctx.fillStyle='#111';
+ if(z.kind!=='mimic'||z.mimicAwake)if(!blink){
+   ctx.beginPath();ctx.arc(-z.r*.23+ex,-z.r*.48+ey,z.r*.105,0,Math.PI*2);ctx.arc(z.r*.23+ex,z.r*.48*0+(-z.r*.48)+ey,z.r*.105,0,Math.PI*2);ctx.fill();
+ }else{
+   ctx.fillRect(-z.r*.34,-z.r*.48, z.r*.2,2);ctx.fillRect(z.r*.14,-z.r*.48,z.r*.2,2);
+ }
+ ctx.strokeStyle='#30151a';ctx.lineWidth=Math.max(1.5,z.r*.08);ctx.beginPath();ctx.arc(0,-z.r*.28,z.r*.28,.15,Math.PI-.15);ctx.stroke();
+
+ // Hit flash / spawn glow
+ if(z.flash>0||z.hit>0){
+   ctx.globalAlpha=Math.min(1,(z.flash+z.hit)*4);
+   ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,z.r*1.08,0,Math.PI*2);ctx.fill();
+ }
+ ctx.restore();
+
+ // HP bar with animated highlight
+ const hp=clamp(z.hp/z.maxHp,0,1);
+ ctx.fillStyle='#171c24';ctx.fillRect(z.x-z.r,z.y-z.r-13,z.r*2,5);
+ ctx.fillStyle=isBossKind(z.kind)?'#ff5265':'#e85f69';ctx.fillRect(z.x-z.r,z.y-z.r-13,z.r*2*hp,5);
+ if(isBossKind(z.kind)){
+   ctx.strokeStyle='#ff8793';ctx.lineWidth=1;ctx.strokeRect(z.x-z.r,z.y-z.r-13,z.r*2,5);
+   ctx.fillStyle='#fff';ctx.font='900 13px Arial';ctx.textAlign='center';
+   ctx.fillText(z.name+(z.kind==='verity'?(z.phase===2?' • PHASE 2':' • THE TRUTH'):' • BOSS'),z.x,z.y-z.r-21);
+   ctx.textAlign='left';
+ }
+}
+
+function draw(){
+ ctx.clearRect(0,0,W,H);
+
+ // Draw remote players before local game objects so they participate visually in the same arena.
+ for(const [id,p] of Object.entries(otherPlayers)){
+   if(!p||p.alive===false)continue;
+   ctx.save();ctx.translate(p.x,p.y);
+   const ang=Number(p.angle)||0;ctx.rotate(ang);
+   ctx.globalAlpha=.92;
+   ctx.fillStyle='#ff66cc';ctx.fillRect(-15,-15,30,30);
+   ctx.fillStyle='#ddd';ctx.fillRect(7,-3,24,6);
+   ctx.restore();
+   ctx.fillStyle='#ffb3e0';ctx.font='10px Arial';ctx.fillText('PLAYER',p.x-20,p.y-25);
+   ctx.fillStyle='#222';ctx.fillRect(p.x-25,p.y+22,50,5);
+   ctx.fillStyle='#ff66cc';ctx.fillRect(p.x-25,p.y+22,50*Math.max(0,Math.min(1,(p.hp||0)/(p.maxHp||100))),5);
+ }
+
+
+ // Animated arena background
+ const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#0b111c');bg.addColorStop(1,'#121827');
+ ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+ const drift=(gameTime*14)%50;
+ ctx.strokeStyle='rgba(255,255,255,.035)';ctx.lineWidth=1;
+ for(let x=-50+drift;x<W+50;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+ for(let y=-50+drift*.7;y<H+50;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+ // Soft arena lights
+ const glow=ctx.createRadialGradient(player.x,player.y,20,player.x,player.y,330);
+ glow.addColorStop(0,'rgba(60,180,120,.08)');glow.addColorStop(1,'rgba(60,180,120,0)');
+ ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+
+ // Effects and particles
+ for(const e of effects){
+   if(e.type==='blast'){
+     ctx.strokeStyle='#ffd166';ctx.lineWidth=5;ctx.globalAlpha=e.life*2;
+     ctx.beginPath();ctx.arc(e.x,e.y,e.max*(1-e.life),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+   } else if(e.type==='pool'){
+     ctx.fillStyle='#552b75aa';ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();
+     ctx.strokeStyle='#a56dff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.r+Math.sin(gameTime*5)*4,0,Math.PI*2);ctx.stroke();
+   } else if(e.type==='bolt'){
+     ctx.strokeStyle='#e8e0ff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(e.x-35,e.y-70);ctx.lineTo(e.x,e.y);ctx.lineTo(e.x+25,e.y-35);ctx.lineTo(e.x+5,e.y+50);ctx.stroke();
+   } else if(e.type==='firePool'||e.type==='acidPool'){
+     ctx.globalAlpha=.28;ctx.fillStyle=e.type==='firePool'?'#ff6b32':'#aaff45';ctx.beginPath();ctx.arc(e.x,e.y,e.r*(.85+.12*Math.sin(gameTime*8)),0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+     ctx.strokeStyle=e.type==='firePool'?'#ff9b52':'#d5ff74';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.r+Math.sin(gameTime*7)*3,0,Math.PI*2);ctx.stroke();
+   } else if(e.type==='chainZap'){
+     ctx.save();ctx.globalAlpha=Math.min(1,e.life*7);ctx.strokeStyle='#d6a5ff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(e.x,e.y);const mx=(e.x+e.tx)/2+Math.sin(gameTime*40)*8,my=(e.y+e.ty)/2+Math.cos(gameTime*37)*8;ctx.lineTo(mx,my);ctx.lineTo(e.tx,e.ty);ctx.stroke();ctx.restore();
+   } else if(e.type==='chronoWave'){
+     ctx.strokeStyle='#e7c6ff';ctx.globalAlpha=e.life*2.5;ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,120*(1-e.life),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+   } else if(e.type==='bossRing'){
+     ctx.globalAlpha=e.life*1.4;ctx.strokeStyle=e.kind==='boneColossus'?'#fff0b0':'#ff9a5a';ctx.lineWidth=5;ctx.beginPath();ctx.arc(e.x,e.y,e.r+(e.max-e.r)*(1-e.life),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+   } else if(e.type==='rift'){
+     ctx.globalAlpha=.32;ctx.fillStyle='#8c4dff';ctx.beginPath();ctx.arc(e.x,e.y,e.r*(.8+.12*Math.sin(gameTime*7)),0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle='#d7a8ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,e.r+Math.sin(gameTime*5)*5,0,Math.PI*2);ctx.stroke();
+   } else if(e.type==='chronoBoss'){
+     ctx.globalAlpha=e.life*1.5;ctx.strokeStyle='#e7c6ff';ctx.lineWidth=5;ctx.beginPath();ctx.arc(e.x,e.y,150*(1-e.life),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+   } else if(e.type==='healPulse'){ctx.globalAlpha=e.life*2.5;ctx.strokeStyle='#79ffb0';ctx.lineWidth=4;ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1-e.life),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;} else if(e.type==='teleportBurst'){ctx.globalAlpha=e.life*3;ctx.strokeStyle='#b58cff';ctx.lineWidth=4;ctx.beginPath();ctx.arc(e.x,e.y,55*(1-e.life),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;} else if(e.type==='drainPulse'){ctx.globalAlpha=e.life*3;ctx.strokeStyle='#ff6688';ctx.lineWidth=5;ctx.beginPath();ctx.arc(e.x,e.y,70*(1-e.life),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;} else if(e.type==='iceStrike'){ctx.globalAlpha=.55;ctx.fillStyle='#8ff4ff';ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1-e.life),0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;} else if(e.type==='eggNest'){
+     ctx.globalAlpha=.7;ctx.fillStyle='#b9e66e';ctx.beginPath();ctx.arc(e.x,e.y,e.r*(.9+.08*Math.sin(gameTime*6)),0,Math.PI*2);ctx.fill();ctx.fillStyle='#efffc0';for(let i=0;i<5;i++){const q=i*1.256;ctx.beginPath();ctx.ellipse(e.x+Math.cos(q)*20,e.y+Math.sin(q)*20,8,11, q,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
+   } else if(e.type==='plasmaMine'){
+     ctx.globalAlpha=.32+.2*Math.sin(gameTime*10);ctx.fillStyle='#55eaff';ctx.beginPath();ctx.arc(e.x,e.y,e.r*(.72+.08*Math.sin(gameTime*8)),0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle='#b8f8ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,e.r*(.55+.18*(1-e.life)),0,Math.PI*2);ctx.stroke();
+   } else if(e.type==='webBurst'){
+     ctx.globalAlpha=e.life*2;ctx.strokeStyle='#d7d0ff';ctx.lineWidth=3;for(let i=0;i<8;i++){const q=i*Math.PI/4;ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(e.x+Math.cos(q)*e.r,e.y+Math.sin(q)*e.r);ctx.stroke();}ctx.globalAlpha=1;
+   } else if(e.type==='hydraStrike'){
+     ctx.globalAlpha=.25;ctx.fillStyle='#8ff4ff';ctx.beginPath();ctx.arc(e.x,e.y,e.r*(1-e.life),0,Math.PI*2);ctx.fill();ctx.globalAlpha=e.life;ctx.strokeStyle='#e9ffff';ctx.lineWidth=5;ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+   } else if(e.type==='phantomBurst'){
+     ctx.globalAlpha=e.life*2;ctx.strokeStyle='#c9d4ff';ctx.lineWidth=4;ctx.beginPath();ctx.arc(e.x,e.y,70*(1-e.life),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+   } else if(e.type==='frostRing'){
+     ctx.globalAlpha=e.life*1.4;ctx.strokeStyle='#9eefff';ctx.lineWidth=6;ctx.beginPath();ctx.arc(e.x,e.y,e.r+(e.max-e.r)*(1-e.life),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+   } else if(e.type==='clockMark'){
+     ctx.globalAlpha=.3;ctx.fillStyle='#c995ff';ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle='#efcfff';ctx.lineWidth=3;ctx.setLineDash([6,6]);ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+   } else if(e.type==='verityBeam'){
+     const active=e.life<1.15-e.telegraph;
+     ctx.save();ctx.translate(e.x,e.y);ctx.rotate(e.angle);
+     ctx.globalAlpha=active?.78:.22;
+     ctx.strokeStyle=active?'#fff':'#efff00';ctx.lineWidth=active?e.width*2:e.width;
+     ctx.shadowBlur=active?24:8;ctx.shadowColor='#efff00';
+     ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(1300,0);ctx.stroke();
+     ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.restore();
+   } else if(e.type==='verityMine'){
+     const pulse=1+Math.sin(gameTime*12)*.12;
+     ctx.fillStyle='#efff00';ctx.globalAlpha=.28+.25*Math.abs(Math.sin(gameTime*7));
+     ctx.beginPath();ctx.arc(e.x,e.y,e.r*pulse,0,Math.PI*2);ctx.fill();
+     ctx.globalAlpha=1;ctx.strokeStyle='#fff';ctx.lineWidth=2;
+     ctx.beginPath();ctx.arc(e.x,e.y,e.r*(.6+.3*Math.abs(Math.sin(gameTime*8))),0,Math.PI*2);ctx.stroke();
+     ctx.fillStyle='#111';ctx.font='bold 10px Arial';ctx.textAlign='center';ctx.fillText('!',e.x,e.y+4);ctx.textAlign='left';
+   }
+ }
+ for(const p of particles){
+   ctx.globalAlpha=clamp(p.life*2,0,1);
+   ctx.fillStyle=p.color||'#ffd66b';
+   ctx.shadowBlur=8;ctx.shadowColor=ctx.fillStyle;
+   ctx.beginPath();ctx.arc(p.x,p.y,p.r*(.7+Math.sin(gameTime*10+p.x)*.3),0,Math.PI*2);ctx.fill();
+   ctx.shadowBlur=0;
+ }
+ ctx.globalAlpha=1;
+
+ // Bullet trails
+ for(const b of bullets){
+   const ang=Math.atan2(b.vy,b.vx);
+   ctx.strokeStyle=b.glow?'#b96cff':'#ffe37a';ctx.lineWidth=Math.max(2,b.r*.75);
+   ctx.globalAlpha=.35;ctx.beginPath();ctx.moveTo(b.x-Math.cos(ang)*18,b.y-Math.sin(ang)*18);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.globalAlpha=1;
+   ctx.fillStyle=b.glow?'#d99bff':'#ffe37a';ctx.shadowBlur=b.glow?18:8;ctx.shadowColor=ctx.fillStyle;
+   ctx.beginPath();ctx.arc(b.x,b.y,b.r*(1+Math.sin(gameTime*18)*.12),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+ }
+ for(const b of enemyBullets){
+   ctx.fillStyle=b.acid?'#b8ff43':b.ice?'#8ff4ff':b.burn?'#ff874f':b.plasma?'#55eaff':b.lightning?'#e9ffff':b.rage?'#ff4f58':b.clock?'#d6a5ff':b.voidSpear?'#9b5cff':b.phantom?'#c9d4ff':'#df78ff';
+   ctx.shadowBlur=10;ctx.shadowColor=ctx.fillStyle;ctx.beginPath();ctx.arc(b.x,b.y,b.r*(1+Math.sin(gameTime*12)*.12),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+ }
+
+ for(const z of zombies)drawZombie(z);
+
+ // Orbiting weapons
+ if(player.orbital){
+   for(let i=0;i<player.orbital*2;i++){
+     const a=gameTime*.95+i*Math.PI/player.orbital,x=player.x+Math.cos(a)*player.orbitRange,y=player.y+Math.sin(a)*player.orbitRange;
+     ctx.save();ctx.translate(x,y);ctx.rotate(a);
+     ctx.fillStyle='#9df6ff';ctx.shadowBlur=18;ctx.shadowColor='#49dfff';
+     ctx.beginPath();ctx.moveTo(14,0);ctx.lineTo(-8,-6);ctx.lineTo(-2,0);ctx.lineTo(-8,6);ctx.closePath();ctx.fill();
+     ctx.restore();
+   }
+ }
+
+ // PLAYER: layered sprite rig. Only the HEAD and RIGHT ARM/GUN aim at the mouse.
+ // Legs, torso, and left hand stay oriented with the movement direction.
+ const moving=!!(keys.d||keys.a||keys.w||keys.s||keys.arrowleft||keys.arrowright||keys.arrowup||keys.arrowdown);
+ const walk=player.moveAnim*10;
+ const aim=Math.atan2(mouse.y-player.y,mouse.x-player.x);
+ player.aimAngle=aim;
+ const moveX=(keys.d?1:0)-(keys.a?1:0)+(keys.arrowright?1:0)-(keys.arrowleft?1:0);
+ const moveY=(keys.s?1:0)-(keys.w?1:0)+(keys.arrowdown?1:0)-(keys.arrowup?1:0);
+ if(moveX||moveY)player.moveAngle=Math.atan2(moveY,moveX);
+ const moveDir=player.moveAngle;
+ const step=Math.sin(walk),step2=Math.sin(walk+Math.PI);
+ // Fixed body parts only move vertically while walking: no diagonal drifting.
+ const legLift=moving?Math.abs(Math.sin(walk))*2.5:Math.sin(gameTime*2)*.35;
+ const bob=moving?Math.abs(Math.sin(walk))*1.6:Math.sin(gameTime*2.5)*.9;
+ const recoil=player.recoil;
+ const hurt=player.damageFlash>0;
+ const squash=moving?(1+Math.sin(walk)*0.015):1;
+ const armBreath=moving?Math.sin(walk)*0.8:Math.sin(gameTime*2)*0.5;
+ function spritePart(img,x,y,w,h,rot=0,alpha=1,flipX=false,partKey=null){
+   if(!img || !img.complete || !img.naturalWidth)return;
+   ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.globalAlpha=alpha;
+   if(flipX)ctx.scale(-1,1);
+   ctx.filter=partKey?partFilter(partKey):'none';
+   ctx.drawImage(img,-w/2,-h/2,w,h);ctx.restore();
+ }
+ // Ground shadow stays underneath the complete character.
+ ctx.save();ctx.globalAlpha=.30;ctx.fillStyle='#000';ctx.beginPath();
+ ctx.ellipse(player.x,player.y+38,30,9,0,0,Math.PI*2);ctx.fill();ctx.restore();
+
+ // Legs NEVER track the mouse: they follow the movement direction and animate independently.
+ const legAim=0;
+ // Legs stay straight/cardinal and animate only vertically; no diagonal rotation or sideways swing.
+ spritePart(legL,player.x-11,player.y+32+bob+legLift+step*1.5,25,43,0,hurt?.72:1,false,'legL');
+ spritePart(legR,player.x+11,player.y+32+bob+legLift+step2*1.5,25,43,0,hurt?.72:1,false,'legR');
+
+ // Torso NEVER tracks the mouse. It faces the direction of travel and gently bobs while idle.
+ ctx.save();ctx.translate(player.x,player.y+5+bob);ctx.scale(1/squash,squash);spritePart(torsoImg,0,0,43,48,0,hurt?.72:1,false,'torso');ctx.restore();
+
+ // Left hand NEVER tracks the mouse. It stays attached to the torso/movement direction.
+ spritePart(handL,player.x-27,player.y+10+bob+armBreath,27,46,0,hurt?.72:1,false,'handL');
+
+ // RIGHT ARM + GUN are the only arm parts that aim at the mouse. Recoil moves the assembly backward.
+ const gunDist=39-recoil*8;
+ // Right arm and gun sit farther out from the torso and are the only aiming layers besides the head.
+ spritePart(gunHandImg,player.x+Math.cos(aim)*gunDist,player.y+bob+Math.sin(aim)*gunDist,42,33,aim-recoil*.10,hurt?.72:1,false,'gun');
+ spritePart(handR,player.x+Math.cos(aim)*23,player.y+bob+Math.sin(aim)*23,40,24,aim-recoil*.06,hurt?.72:.98,false,'handR');
+
+ // HEAD follows the mouse without ever turning upside-down. When the cursor
+ // moves behind the player, the head flips horizontally and keeps a natural upright tilt.
+ const headFacingLeft=Math.cos(aim)<0;
+ const headTurn=Math.atan2(Math.sin(aim),Math.abs(Math.cos(aim))) * .72;
+ const headRotation=(headFacingLeft ? -headTurn : headTurn)+Math.sin(gameTime*3)*.018;
+ spritePart(player.hp<player.maxHp*.5?lowHeadImg:headImg,player.x+Math.cos(aim)*4,player.y-29+bob+Math.sin(aim)*2,34,33,headRotation,hurt?.72:1,headFacingLeft,'head');
+
+ // Hit flash is an overlay only; it never replaces the sprites.
+ if(hurt){
+   ctx.save();ctx.globalAlpha=.22;ctx.fillStyle='#fff';ctx.beginPath();
+   ctx.arc(player.x,player.y+bob,28,0,Math.PI*2);ctx.fill();ctx.restore();
+ }
+ if(player.flash>0){
+   ctx.save();ctx.translate(player.x+Math.cos(aim)*55,player.y+bob+Math.sin(aim)*55);ctx.rotate(aim);
+   ctx.globalAlpha=player.flash/.08;ctx.fillStyle='#fff2a8';ctx.shadowBlur=20;ctx.shadowColor='#ffd45c';
+   ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(25,0);ctx.lineTo(0,8);ctx.closePath();ctx.fill();ctx.restore();
+ }
+ if(player.shield>0){
+   ctx.strokeStyle='#75dfff';ctx.lineWidth=3;ctx.globalAlpha=.65+.2*Math.sin(gameTime*6);
+   ctx.beginPath();ctx.arc(player.x,player.y,player.r+9+Math.sin(gameTime*5),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
+ }
+
+ // Damage vignette
+ if(player.damageFlash>0){
+   ctx.fillStyle='rgba(255,40,60,'+Math.min(.3,player.damageFlash*.25)+')';ctx.fillRect(0,0,W,H);
+ }
+
+ for(const t of texts){
+   ctx.globalAlpha=t.life;ctx.fillStyle='#fff3a6';ctx.font='bold 16px Arial';ctx.fillText(t.text,t.x,t.y);
+ }
+ ctx.globalAlpha=1;
+}
+function updateHud(){
+ document.getElementById('wave').textContent=wave;document.getElementById('kills').textContent='Kills: '+kills;
+ document.getElementById('healthText').textContent=Math.ceil(player.hp)+' / '+Math.ceil(player.maxHp);
+ document.getElementById('healthfill').style.width=(clamp(player.hp/player.maxHp,0,1)*100)+'%';
+ document.getElementById('build').textContent=`DMG ${player.damage.toFixed(1)} · Reload ${Math.max(.055,player.reload*(1-player.fireRate)).toFixed(2)}s · Shots ${player.shots} · Crit ${Math.round(player.crit*100)}%`;
+}
+function rarity(){
+ const r=Math.random()*100-Math.min(20,player.luck*10);
+ return r<48?'common':r<78?'rare':r<96?'epic':'legendary';
+}
+function makeCard(){
+ const rar=rarity(), pool=upgrades.filter(u=>u[4]===rar);
+ const u=pool[Math.floor(Math.random()*pool.length)];
+ return {name:u[0],desc:u[1],icon:u[2],id:u[3],rarity:rar};
+}
+function chooseCards(){
+ paused=true;waveCleared=false;const box=document.getElementById('cards');box.classList.add('show');
+ const chosen=[];while(chosen.length<3){const c=makeCard();if(!chosen.some(x=>x.name===c.name))chosen.push(c)}
+ chosen.forEach((u,i)=>{const el=document.getElementById('c'+(i+1));el.className='card '+u.rarity;el.innerHTML=`<div class="rarity">${u.rarity}</div><div class="icon">${u.icon}</div><h2>${u.name}</h2><p>${u.desc}</p><small>CHOOSE THIS UPGRADE</small>`;el.onclick=()=>{applyUpgrade(u);box.classList.remove('show');paused=false;wave++;spawnWave()}})
+}
+
+const megaUpgradeEffects={'mega0':p=>{p.damage*=1+18/100},'mega1':p=>{p.reload*=Math.max(.45,1-12/100)},'mega2':p=>{p.speedMult*=1+15/100},'mega3':p=>{p.crit+= 7/100},'mega4':p=>{p.maxHp+=25;p.hp=clamp(p.hp+25,0,p.maxHp)},'mega5':p=>{p.bulletSpeed*=1+20/100},'mega6':p=>{p.bulletSize*=1+25/100},'mega7':p=>{p.pierce+=2},'mega8':p=>{p.shots+=1},'mega9':p=>{p.lifeSteal+= 5/100},'mega10':p=>{p.shieldMax+=30;p.shield=p.shieldMax},'mega11':p=>{p.enemySlow+= 10/100},'mega12':p=>{p.knockback+=18},'mega13':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega14':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+20/10},'mega15':p=>{p.dashChance+= 5/100},'mega16':p=>{p.regen+= 1},'mega17':p=>{p.boss=(p.boss||0)+55/100},'mega18':p=>{p.fastbuster=(p.fastbuster||0)+35/100},'mega19':p=>{p.tankbuster=(p.tankbuster||0)+35/100},'mega20':p=>{p.close=(p.close||0)+30/100},'mega21':p=>{p.far=(p.far||0)+25/100},'mega22':p=>{p.waveRunner=(p.waveRunner||0)+15/100},'mega23':p=>{p.comboPower=(p.comboPower||0)+12/100},'mega24':p=>{p.orbital=(p.orbital||0)+1},'mega25':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega26':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega27':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega28':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+20/100},'mega29':p=>{p.explosive=(p.explosive||0)+18/100},'mega30':p=>{p.damageTaken*=Math.max(.5,1-10/100)},'mega31':p=>{p.magnet+=(p.magnet||0)+35},'mega32':p=>{p.hp=clamp(p.hp+60,0,p.maxHp)},'mega33':p=>{p.critMult+=(p.critMult||2)*12/100},'mega34':p=>{p.fireRate+=(p.fireRate||0)+30/100},'mega35':p=>{p.extraLife++},'mega36':p=>{p.luck++},'mega37':p=>{p.thorns=(p.thorns||0)+1/10},'mega38':p=>{p.thorns=(p.thorns||0)+4/10},'mega39':p=>{p.healOnKill=(p.healOnKill||0)+5},'mega40':p=>{p.bulletLife*=1+18/100},'mega41':p=>{p.damage*=1+12/100},'mega42':p=>{p.reload*=Math.max(.45,1-15/100)},'mega43':p=>{p.speedMult*=1+7/100},'mega44':p=>{p.crit+= 25/100},'mega45':p=>{p.maxHp+=20;p.hp=clamp(p.hp+20,0,p.maxHp)},'mega46':p=>{p.bulletSpeed*=1+25/100},'mega47':p=>{p.bulletSize*=1+12/100},'mega48':p=>{p.pierce+=1},'mega49':p=>{p.shots+=1},'mega50':p=>{p.lifeSteal+= 30/100},'mega51':p=>{p.shieldMax+=10;p.shield=p.shieldMax},'mega52':p=>{p.enemySlow+= 18/100},'mega53':p=>{p.knockback+=20},'mega54':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega55':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+20/10},'mega56':p=>{p.dashChance+= 0/100},'mega57':p=>{p.regen+= 5},'mega58':p=>{p.boss=(p.boss||0)+35/100},'mega59':p=>{p.fastbuster=(p.fastbuster||0)+35/100},'mega60':p=>{p.tankbuster=(p.tankbuster||0)+30/100},'mega61':p=>{p.close=(p.close||0)+25/100},'mega62':p=>{p.far=(p.far||0)+15/100},'mega63':p=>{p.waveRunner=(p.waveRunner||0)+12/100},'mega64':p=>{p.comboPower=(p.comboPower||0)+15/100},'mega65':p=>{p.orbital=(p.orbital||0)+1},'mega66':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega67':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega68':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega69':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+18/100},'mega70':p=>{p.explosive=(p.explosive||0)+10/100},'mega71':p=>{p.damageTaken*=Math.max(.5,1-35/100)},'mega72':p=>{p.magnet+=(p.magnet||0)+60},'mega73':p=>{p.hp=clamp(p.hp+12,0,p.maxHp)},'mega74':p=>{p.critMult+=(p.critMult||2)*30/100},'mega75':p=>{p.fireRate+=(p.fireRate||0)+20/100},'mega76':p=>{p.extraLife++},'mega77':p=>{p.luck++},'mega78':p=>{p.thorns=(p.thorns||0)+4/10},'mega79':p=>{p.thorns=(p.thorns||0)+20/10},'mega80':p=>{p.healOnKill=(p.healOnKill||0)+4},'mega81':p=>{p.bulletLife*=1+12/100},'mega82':p=>{p.damage*=1+15/100},'mega83':p=>{p.reload*=Math.max(.45,1-7/100)},'mega84':p=>{p.speedMult*=1+25/100},'mega85':p=>{p.crit+= 20/100},'mega86':p=>{p.maxHp+=25;p.hp=clamp(p.hp+25,0,p.maxHp)},'mega87':p=>{p.bulletSpeed*=1+12/100},'mega88':p=>{p.bulletSize*=1+10/100},'mega89':p=>{p.pierce+=1},'mega90':p=>{p.shots+=2},'mega91':p=>{p.lifeSteal+= 10/100},'mega92':p=>{p.shieldMax+=18;p.shield=p.shieldMax},'mega93':p=>{p.enemySlow+= 20/100},'mega94':p=>{p.knockback+=20},'mega95':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega96':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+2/10},'mega97':p=>{p.dashChance+= 13/100},'mega98':p=>{p.regen+= 3},'mega99':p=>{p.boss=(p.boss||0)+35/100},'mega100':p=>{p.fastbuster=(p.fastbuster||0)+30/100},'mega101':p=>{p.tankbuster=(p.tankbuster||0)+25/100},'mega102':p=>{p.close=(p.close||0)+15/100},'mega103':p=>{p.far=(p.far||0)+12/100},'mega104':p=>{p.waveRunner=(p.waveRunner||0)+15/100},'mega105':p=>{p.comboPower=(p.comboPower||0)+22/100},'mega106':p=>{p.orbital=(p.orbital||0)+1},'mega107':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega108':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega109':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega110':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+10/100},'mega111':p=>{p.explosive=(p.explosive||0)+35/100},'mega112':p=>{p.damageTaken*=Math.max(.5,1-60/100)},'mega113':p=>{p.magnet+=(p.magnet||0)+12},'mega114':p=>{p.hp=clamp(p.hp+30,0,p.maxHp)},'mega115':p=>{p.critMult+=(p.critMult||2)*20/100},'mega116':p=>{p.fireRate+=(p.fireRate||0)+1/100},'mega117':p=>{p.extraLife++},'mega118':p=>{p.luck++},'mega119':p=>{p.thorns=(p.thorns||0)+20/10}};
+
+function applyUpgrade(u){
+ upgradeHistory.push(u.name);
+ const p=player;
+ if(megaUpgradeEffects[u.id]){megaUpgradeEffects[u.id](p);say(u.name);return;}
+ switch(u.id){
+ case'reload':p.reload*=.88;break;case'damage':p.damage+=1;break;case'speed':p.speedMult*=1.12;break;
+ case'health':p.maxHp+=20;p.hp=clamp(p.hp+20,0,p.maxHp);break;case'bulletSpeed':p.bulletSpeed*=1.15;break;case'bulletSize':p.bulletSize*=1.3;break;
+ case'spread':p.spread*=.82;break;case'armor':p.damageTaken*=.92;break;case'regen':p.regen+=1;break;case'execute':p.execute=(p.execute||0)+.25;break;
+ case'doubletap':p.doubletap=true;break;case'burn':p.burn=1;break;case'freeze':p.freeze=1;break;case'luck':p.luck++;break;case'boots':p.speedMult*=1.08;p.knockback+=4;break;
+ case'reloadFlat':p.reload=Math.max(.06,p.reload-.03);break;case'crit':p.crit+=.05;break;case'health10':p.maxHp+=10;p.hp+=10;break;case'heal':p.hp=clamp(p.hp+12,0,p.maxHp);break;
+ case'resist':p.knockResist=true;break;case'shots':p.shots++;break;case'shots2':p.shots+=2;break;case'pierce':p.pierce++;break;case'crit12':p.crit+=.12;break;
+ case'healKill':p.healOnKill+=3;break;case'vamp':p.lifeSteal+=.015;break;case'armor18':p.damageTaken*=.82;break;case'dodge':p.dashChance+=.08;break;
+ case'ricochet':p.bounce=(p.bounce||0)+1;break;case'homing':p.homing=true;break;case'chain':p.chain=.25;break;case'cryo':p.cryo=true;break;case'poison':p.poison=.7;break;case'shock':p.shock=true;break;
+ case'magnet':p.magnet+=100;break;case'shield':p.shieldMax+=25;p.shield=p.shieldMax;break;case'berserk':p.berserk=.35;break;case'laststand':p.laststand=true;break;case'knockback':p.knockback+=12;break;case'bulletLife':p.bulletLife*=1.4;break;
+ case'nuclear':p.explosive=(p.explosive||0)+.18;break;case'orbit':p.orbital=(p.orbital||0)+1;break;case'lightning':p.lightning=(p.lightning||0)+1;break;case'meteor':p.meteor=true;break;case'nova':p.nova=true;break;
+ case'glass':p.damage*=1.7;p.maxHp=Math.max(20,p.maxHp-20);p.hp=clamp(p.hp,p.maxHp*.01,p.maxHp);break;case'mark':p.mark=.5;break;case'fireRate':p.fireRate+=.25;break;case'soul':p.soul=true;break;case'plasma':p.pierce+=2;p.plasma=true;break;
+ case'explosion':p.explosionRadius*=1.45;p.explosive=(p.explosive||0)+.05;break;case'chain2':p.chain2=(p.chain2||0)+2;break;case'inferno':p.inferno=true;break;case'enemySlow':p.enemySlow+=.12;break;case'life':p.extraLife++;break;case'shield25':p.shieldMax+=25;p.shield=p.shieldMax;break;
+ case'regen3':p.regen+=3;break;case'execute2':p.execute2=(p.execute2||0)+.75;break;case'overclock':p.reload*=.78;p.bulletSpeed*=1.2;break;case'blackhole':p.blackhole=true;break;
+ case'chaos':p.chaos=true;break;case'singularity':p.singularity=true;break;case'laser':p.laser=true;break;case'meteor3':p.meteor=true;p.meteor3=true;break;case'storm':p.chain2=(p.chain2||0)+2;p.lightning=(p.lightning||0)+1;break;
+ case'vamp3':p.lifeSteal*=3;p.healOnKill*=3;break;case'phoenix':p.extraLife++;break;case'zeropoint':p.enemySlow+=.22;break;case'doom':p.damage*=2;p.maxHp=Math.max(15,p.maxHp-10);p.hp=clamp(p.hp,1,p.maxHp);break;case'reality':p.reality=true;break;
+ case'shards':p.thorns=(p.thorns||0)+8;break;case'thorns':p.thorns=(p.thorns||0)+15;break;case'recovery':p.recovery=true;break;case'rageSpeed':p.rageSpeed=true;break;case'hunter':p.hunter=true;break;case'crowd':p.crowd=true;break;case'close':p.close=true;break;case'critMulti':p.critMult+=1;break;case'auto':p.fireRate+=.12;break;case'drill':p.drill=true;break;
+ case'bounce':p.bounce=(p.bounce||0)+2;break;case'needle':p.bulletSize*=.7;p.damage*=1.35;break;case'wide':p.shots+=2;p.spread*=1.35;break;case'focus':p.spread*=.6;p.damage*=1.15;break;case'overpen':p.pierce+=3;p.damage*=.9;break;case'pulse':p.pulse=true;break;case'arc':p.arc=true;break;case'vortex':p.vortex=true;break;case'rageEngine':p.rageEngine=true;break;case'shatter':p.shatter=true;break;
+ case'toxicCloud':p.toxicCloud=true;break;case'fireTrail':p.fireTrail=true;break;case'field':p.field=true;break;case'acidBlood':p.acidBlood=true;break;case'bounty':p.bounty=true;break;case'secondWind':p.secondWind=true;break;case'desperation':p.desperation=true;break;case'fortress':p.fortress=true;break;case'momentum':p.momentum=true;break;case'vigilance':p.vigilance=true;break;
+ case'overcharge':p.overcharge=true;break;case'seven':p.seven=true;break;case'bloodrush':p.bloodrush=true;break;case'scrap':p.scrap=true;break;case'boss':p.boss=.8;break;case'minion':p.minion=.25;break;case'tankbuster':p.tankbuster=.35;break;case'fastbuster':p.fastbuster=.4;break;case'scholar':p.scholar=true;break;case'waveRunner':p.waveRunner=true;break;
+ case'clean':p.clean=true;break;case'adrenaline':p.maxHp=Math.max(20,p.maxHp-10);p.hp=clamp(p.hp,p.maxHp*.5,p.maxHp);p.speedMult*=1.25;break;case'juggernaut':p.speedMult*=.88;p.maxHp+=50;p.hp+=50;break;case'mini':p.r*=.85;p.dashChance+=.05;break;case'colossus':p.r*=1.2;p.damage*=1.2;break;case'luckyshot':p.luckyshot=true;break;case'chaosreload':p.chaosreload=true;break;case'echo':p.echo=true;break;case'phantom':p.phantom=true;break;case'finalhour':p.finalhour=true;break;
+ }
+ say(u.name);
+}
+const colorParts={
+ head:{label:'Head',h:0,s:100,b:100},
+ torso:{label:'Torso',h:0,s:100,b:100},
+ handL:{label:'Left Arm / Hand',h:0,s:100,b:100},
+ handR:{label:'Right Arm / Hand',h:0,s:100,b:100},
+ gun:{label:'Gun',h:0,s:100,b:100},
+ legL:{label:'Left Leg',h:0,s:100,b:100},
+ legR:{label:'Right Leg',h:0,s:100,b:100}
+};
+function partFilter(key){const c=colorParts[key];return `hue-rotate(${c.h}deg) saturate(${c.s}%) brightness(${c.b}%)`;}
+function drawCustomizationPreview(){
+ const pc=document.getElementById('customPreview'); if(!pc)return;
+ const pctx=pc.getContext('2d'); pctx.clearRect(0,0,pc.width,pc.height);
+ const cx=180, cy=145;
+ const drawPart=(img,x,y,w,h,rot=0,flip=false,key=null)=>{
+  if(!img||!img.complete||!img.naturalWidth)return;
+  pctx.save();pctx.translate(x,y);pctx.rotate(rot);if(flip)pctx.scale(-1,1);
+  pctx.filter=key?partFilter(key):'none';pctx.drawImage(img,-w/2,-h/2,w,h);pctx.restore();
+ };
+ // shadow
+ pctx.save();pctx.globalAlpha=.28;pctx.fillStyle='#000';pctx.beginPath();pctx.ellipse(cx,cy+96,62,14,0,0,Math.PI*2);pctx.fill();pctx.restore();
+ // Same layered sprite proportions as the game, arranged in a clear neutral pose.
+ drawPart(legL,cx-18,cy+72,34,58,0,false,'legL');
+ drawPart(legR,cx+18,cy+72,34,58,0,false,'legR');
+ drawPart(torsoImg,cx,cy+26,58,65,0,false,'torso');
+ drawPart(handL,cx-39,cy+34,34,57,0,false,'handL');
+ drawPart(handR,cx+37,cy+30,52,31,0,false,'handR');
+ drawPart(gunHandImg,cx+66,cy+31,64,48,0,false,'gun');
+ drawPart(headImg,cx,cy-32,50,48,0,false,'head');
+}
+
+for(const img of [headImg,lowHeadImg,torsoImg,handL,handR,gunHandImg,legL,legR]) img.addEventListener('load',drawCustomizationPreview);
+function buildCustomizer(){
+ const root=document.getElementById('customParts');root.innerHTML='';
+ for(const [key,c] of Object.entries(colorParts)){
+  const el=document.createElement('div');el.className='partControl';el.innerHTML=`<div class="partHead"><span>${c.label}</span><span class="swatch" id="sw-${key}"></span></div>
+  <label class="rangeRow"><span>HUE</span><input data-k="${key}" data-p="h" type="range" min="-180" max="180" value="${c.h}"><span id="v-${key}-h">${c.h}°</span></label>
+  <label class="rangeRow"><span>SATURATION</span><input data-k="${key}" data-p="s" type="range" min="0" max="250" value="${c.s}"><span id="v-${key}-s">${c.s}%</span></label>
+  <label class="rangeRow"><span>BRIGHTNESS</span><input data-k="${key}" data-p="b" type="range" min="40" max="180" value="${c.b}"><span id="v-${key}-b">${c.b}%</span></label>`;
+  root.appendChild(el);
+ }
+ root.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{const k=inp.dataset.k,p=inp.dataset.p; colorParts[k][p]=+inp.value;document.getElementById(`v-${k}-${p}`).textContent=p==='h'?inp.value+'°':inp.value+'%';updateSwatch(k);drawCustomizationPreview()}));
+ Object.keys(colorParts).forEach(updateSwatch);
+}
+function updateSwatch(k){const s=document.getElementById('sw-'+k);if(!s)return;const c=colorParts[k];s.style.background=`hsl(${(c.h+360)%360} ${Math.min(100,c.s)}% ${Math.min(100,c.b/2)}%)`;s.style.filter=partFilter(k);}
+function resetColors(){for(const c of Object.values(colorParts)){c.h=0;c.s=100;c.b=100}buildCustomizer();drawCustomizationPreview()}
+buildCustomizer();
+drawCustomizationPreview();
+
+function fillCodex(){
+ const list=document.getElementById('zlist');list.innerHTML='';
+ zombieTypes.forEach(t=>{const [name,desc,kind,hp,speed,r,col]=t;const d=document.createElement('div');d.className='zitem';d.innerHTML=`<div class="zname">${name}</div><div class="zdesc">${desc}</div><div class="pill">HP ${hp} · SPEED ${speed}</div>`;list.appendChild(d)})
+}
+function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(k==='escape'&&running){paused=!paused;document.getElementById('codex').style.display=paused?'grid':'none'}if(k===' '||k.startsWith('arrow'))e.preventDefault()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();mouse.x=(e.clientX-r.left)*W/r.width;mouse.y=(e.clientY-r.top)*H/r.height});
+canvas.addEventListener('mousedown',()=>mouse.down=true);addEventListener('mouseup',()=>mouse.down=false);
+
+// 3D upgrade cards: tilt toward the cursor and add a moving highlight.
+document.querySelectorAll('.card').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width, py=(e.clientY-r.top)/r.height;
+    const ry=(px-.5)*34, rx=-(py-.5)*34;
+    card.style.setProperty('--rx',rx.toFixed(2)+'deg');card.style.setProperty('--ry',ry.toFixed(2)+'deg');
+    card.style.setProperty('--mx',(px*100).toFixed(1)+'%');card.style.setProperty('--my',(py*100).toFixed(1)+'%');
+  });
+  card.addEventListener('mouseleave',()=>{card.style.setProperty('--rx','0deg');card.style.setProperty('--ry','0deg');card.style.setProperty('--mx','50%');card.style.setProperty('--my','50%')});
+});
+
+document.getElementById('customizeBtn').onclick=()=>document.getElementById('customize').classList.remove('modalHidden');
+document.getElementById('closeCustomize').onclick=()=>document.getElementById('customize').classList.add('modalHidden');
+document.getElementById('resetColors').onclick=resetColors;
+document.getElementById('startBtn').onclick=()=>{document.getElementById('start').classList.add('hidden');running=true;wave=1;waveCleared=false;discoveredZombies.clear();zombieNoticeQueue.length=0;zombieNoticeBusy=false;document.getElementById('newZombie').classList.remove('show');spawnWave()};
+document.getElementById('codexBtn').onclick=()=>document.getElementById('codex').style.display='grid';
+document.getElementById('closeCodex').onclick=()=>document.getElementById('codex').style.display='none';
+document.getElementById('restart').onclick=()=>location.reload();
+document.getElementById('goMenu').onclick=()=>location.reload();
+fillCodex();updateHud();requestAnimationFrame(loop);
 </script>
 </body>
 </html>
