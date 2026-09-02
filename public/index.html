@@ -36,10 +36,24 @@ h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10
 #gameover{display:none}.over{text-align:center}.over h2{font-size:58px;margin:0 0 10px;color:#ff6470}#customize{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.82);backdrop-filter:blur(5px);z-index:40}.modalHidden{display:none!important}.customizeBox{width:min(820px,94vw)}#customParts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.previewWrap{margin-top:16px;border:1px solid #303b4d;border-radius:16px;background:radial-gradient(circle at 50% 35%,#202d42,#080c12 72%);padding:12px;text-align:center}.previewTitle{font-size:12px;font-weight:900;letter-spacing:2px;color:#8eeaff;margin-bottom:4px}.previewWrap canvas{width:360px;max-width:100%;height:auto;border:1px solid #334057;border-radius:12px;background:transparent;display:block;margin:auto}.previewHint{font-size:11px;color:#8793a5;margin-top:5px}.partControl{padding:12px;border:1px solid #303b4d;border-radius:12px;background:#0c121b}.partHead{display:flex;justify-content:space-between;align-items:center;font-weight:900;margin-bottom:8px}.swatch{width:18px;height:18px;border-radius:50%;border:1px solid #fff5;display:inline-block}.rangeRow{display:grid;grid-template-columns:80px 1fr 42px;gap:8px;align-items:center;margin:5px 0;font-size:11px;color:#aeb8c6}.rangeRow input{width:100%}@media(max-width:800px){#customParts{grid-template-columns:1fr}}
 
 @media(max-width:800px){#cards{grid-template-columns:1fr;padding:20px;overflow:auto}.card{min-height:220px}#zlist{grid-template-columns:1fr 1fr}.panel{min-width:0}h1{font-size:36px}}
-#onlinePanel{position:absolute;top:14px;right:14px;z-index:50;background:rgba(8,12,18,.94);border:1px solid #354257;border-radius:14px;padding:12px;width:290px;box-shadow:0 12px 35px #0008}
-#onlinePanel h3{margin:0 0 7px;font-size:14px}.onlineRow{display:flex;gap:6px;margin-top:7px}.onlineRow input{flex:1;min-width:0;background:#111722;color:#fff;border:1px solid #354257;border-radius:8px;padding:9px}.onlineRow button{padding:9px 10px}.onlineStatus{font-size:11px;color:#aeb8c6;margin-top:7px;line-height:1.3}.onlineCode{font-weight:900;color:#8eeaff;letter-spacing:2px}
-.otherPlayerName{font-size:10px}
-@media(max-width:800px){#onlinePanel{top:auto;bottom:45px;right:8px;width:260px}}
+
+#onlineLobby{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,7,12,.82);backdrop-filter:blur(8px)}
+#onlineLobby.hidden{display:none}
+.lobbyBox{width:min(680px,92vw);max-height:88vh;overflow:auto;background:#101722;border:1px solid #34445c;border-radius:20px;padding:24px;box-shadow:0 30px 80px #000b}
+.lobbyBox h2{margin:0 0 4px;font-size:28px}.lobbySub{color:#9daabc;font-size:13px;margin-bottom:16px}
+.lobbyName{display:flex;gap:8px;margin-bottom:14px}.lobbyName input,.lobbyCode{flex:1;background:#0a0f17;color:#fff;border:1px solid #3a4b64;border-radius:9px;padding:11px}
+.lobbyBtns{display:flex;gap:8px;flex-wrap:wrap}.lobbyBtns button{padding:10px 14px}
+.lobbyCodeRow{display:flex;gap:8px;margin-top:10px}.lobbyCodeRow input{max-width:170px;text-transform:uppercase}
+.lobbyPlayers{margin-top:16px;border-top:1px solid #263347;padding-top:12px}
+.lobbyPlayer{display:flex;align-items:center;gap:9px;padding:7px 0}.hostBadge{font-size:9px;padding:3px 6px;border-radius:5px;background:#3b6cff}
+.lobbyRigDot{width:12px;height:12px;border-radius:50%;background:#ff66cc;display:inline-block}
+.lobbyStatus{margin-top:12px;color:#b8c5d8;font-size:12px}.lobbyStart{margin-top:15px;width:100%;font-weight:900}
+#voteOverlay{position:fixed;inset:0;z-index:280;display:none;align-items:center;justify-content:center;background:rgba(3,6,10,.78)}
+#voteOverlay.show{display:flex}.voteBox{width:min(900px,94vw);background:#101722;border:1px solid #3c4d67;border-radius:20px;padding:20px;text-align:center}
+.voteTimer{font-size:26px;font-weight:900;color:#ffe37a}.voteCards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:15px}.voteCard{cursor:pointer;min-height:180px}.voteCard.voted{outline:3px solid #73e6ff}
+.voteCount{font-size:12px;color:#9eeaff;margin-top:7px}.spectateBanner{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:260;background:#101722dd;border:1px solid #ff6688;color:#ffb3c3;border-radius:999px;padding:9px 16px;font-weight:900;display:none}
+.spectateBanner.show{display:block}
+@media(max-width:700px){.voteCards{grid-template-columns:1fr}.voteCard{min-height:130px}}
 </style>
 <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -55,13 +69,29 @@ h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10
 <div id="message"></div>
 <div id="newZombie"><canvas id="zPreview" width="82" height="82"></canvas><div><div class="nzTitle">NEW ENEMY DISCOVERED</div><div class="nzName" id="nzName"></div><div class="nzDesc" id="nzDesc"></div><div class="nzStats" id="nzStats"></div></div></div>
 <div id="hint">WASD / Arrow Keys move · Mouse aim · Hold SPACE or click to fire · ESC opens Codex</div>
-<div id="onlinePanel">
-  <h3>🌐 ONLINE CO-OP</h3>
-  <div class="onlineRow"><button id="createRoomBtn">CREATE ROOM</button></div>
-  <div class="onlineRow"><input id="roomInput" maxlength="8" placeholder="Room code"><button id="joinRoomBtn">JOIN</button></div>
-  <div class="onlineStatus" id="onlineStatus">Connecting to online server...</div>
-</div>
 
+
+<div id="onlineLobby">
+ <div class="lobbyBox">
+  <h2>🌐 ONLINE CO-OP LOBBY</h2>
+  <div class="lobbySub">Set your username, create a lobby, invite friends, then the host starts the run when everyone is ready.</div>
+  <div class="lobbyName"><input id="usernameInput" maxlength="16" placeholder="Username"><button id="saveUsernameBtn">SAVE</button></div>
+  <div class="lobbyBtns"><button id="createLobbyBtn">CREATE LOBBY</button></div>
+  <div class="lobbyCodeRow"><input id="joinCodeInput" class="lobbyCode" maxlength="8" placeholder="ROOM CODE"><button id="joinLobbyBtn">JOIN LOBBY</button></div>
+  <div class="lobbyStatus" id="lobbyStatus">Connecting...</div>
+  <div class="lobbyPlayers"><b>PLAYERS</b><div id="lobbyPlayersList">No lobby yet.</div></div>
+  <button id="startLobbyBtn" class="lobbyStart" disabled>START RUN — HOST ONLY</button>
+ </div>
+</div>
+<div id="voteOverlay">
+ <div class="voteBox">
+  <h2>🎴 TEAM UPGRADE VOTE</h2>
+  <div>Everyone votes. After <b>10 seconds</b>, the card with the most votes is given to <b>everyone</b>.</div>
+  <div class="voteTimer" id="voteTimer">10</div>
+  <div class="voteCards"><div class="card voteCard" id="vc1"></div><div class="card voteCard" id="vc2"></div><div class="card voteCard" id="vc3"></div></div>
+ </div>
+</div>
+<div id="spectateBanner" class="spectateBanner">👻 SPECTATING — WAIT FOR YOUR TEAM TO CLEAR THE ROUND</div>
 <div id="start"><div class="box">
 <h1>☣ ZOMBIE SURVIVOR</h1><div class="sub">CHAOS EDITION — every run is different.</div>
 <p>Survive escalating waves, choose <b>1 of 3 random upgrades</b> after every wave, and learn enemy types in the Zombie Codex, including multiple deadly bosses and the Verity boss.</p>
@@ -79,28 +109,54 @@ h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10
 
 <script>
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
-// Internet multiplayer: the existing game remains the game; this layer shares players over Socket.IO.
 const socket=typeof io==='function'?io():null;
-let onlineRoom='',onlineConnected=false,otherPlayers={};
-const onlineStatusEl=document.getElementById('onlineStatus');
-function onlineStatus(msg){if(onlineStatusEl)onlineStatusEl.innerHTML=msg}
+let onlineRoom='',onlineHost=false,onlineStarted=false,onlinePlayerCount=1,onlinePlayers={},onlineUsername=localStorage.getItem('zs_username')||'Player',spectating=false;
+let voteCards=[],voteChoice=-1,voteSeconds=0,voteInterval=null,onlineRound=1;
+const onlineLobby=document.getElementById('onlineLobby'), lobbyStatus=document.getElementById('lobbyStatus'), lobbyList=document.getElementById('lobbyPlayersList'), startLobbyBtn=document.getElementById('startLobbyBtn');
+document.getElementById('usernameInput').value=onlineUsername;
+function setLobbyStatus(x){lobbyStatus.textContent=x}
+function renderLobby(){
+ const ids=Object.keys(onlinePlayers);
+ onlinePlayerCount=Math.max(1,ids.length);
+ lobbyList.innerHTML=ids.length?ids.map(id=>{
+   const p=onlinePlayers[id]||{}; return `<div class="lobbyPlayer"><span class="lobbyRigDot"></span><b>${escapeHtml(p.username||'Player')}</b>${id===p.hostId?'<span class="hostBadge">HOST</span>':''}${p.ready?' <span style="color:#79ffb0">✓</span>':''}</div>`;
+ }).join(''):'No lobby yet.';
+ startLobbyBtn.disabled=!onlineHost||ids.length<1||onlineStarted;
+ startLobbyBtn.textContent=onlineHost?(onlineStarted?'RUN STARTED':'START RUN — HOST ONLY'):'WAITING FOR HOST';
+}
+function escapeHtml(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function sendProfile(){
+ if(!socket||!onlineRoom)return;
+ socket.emit('profile',{username:onlineUsername,customization:colorParts});
+}
 if(socket){
- socket.on('connect',()=>{onlineConnected=true;onlineStatus('🟢 Connected to the online server. Create or join a room.')});
- socket.on('disconnect',()=>{onlineConnected=false;onlineStatus('🔴 Disconnected from server.')});
- socket.on('connect_error',()=>onlineStatus('🔴 Could not connect to the server.'));
- socket.on('roomCreated',code=>{onlineRoom=code;onlineStatus('Room created: <span class="onlineCode">'+code+'</span><br>Send this code to your friend.')});
- socket.on('joinedRoom',code=>{onlineRoom=code;onlineStatus('🟢 Joined room: <span class="onlineCode">'+code+'</span>')});
- socket.on('roomError',msg=>onlineStatus('⚠️ '+msg));
- socket.on('roomPlayers',players=>{otherPlayers=players||{}});
+ socket.on('connect',()=>setLobbyStatus('🟢 Connected. Create a lobby or join one.'));
+ socket.on('connect_error',()=>setLobbyStatus('🔴 Could not connect to multiplayer server.'));
+ socket.on('disconnect',()=>setLobbyStatus('🔴 Disconnected.'));
+ socket.on('roomCreated',code=>{onlineRoom=code;onlineHost=true;setLobbyStatus('Lobby created. Share code '+code);sendProfile()});
+ socket.on('joinedRoom',code=>{onlineRoom=code;onlineHost=false;setLobbyStatus('Joined lobby '+code);sendProfile()});
+ socket.on('roomError',m=>setLobbyStatus('⚠️ '+m));
+ socket.on('lobbyState',st=>{onlinePlayers=st.players||{};onlineHost=st.hostId===socket.id;onlineStarted=!!st.started;onlineRound=st.round||1;renderLobby();
+   if(onlineStarted){onlineLobby.classList.add('hidden');document.getElementById('start').classList.add('hidden');running=true;}
+ });
+ socket.on('remoteState',st=>{onlinePlayers=st.players||{};renderLobby()});
+ socket.on('gameStarted',st=>{onlineStarted=true;onlineRound=st.round||1;onlineLobby.classList.add('hidden');document.getElementById('start').classList.add('hidden');running=true;wave=onlineRound;waveCleared=false;gameOver=false;spectating=false;document.getElementById('spectateBanner').classList.remove('show');spawnWave()});
+ socket.on('roundVote',data=>showVote(data.cards,data.seconds||10));
+ socket.on('voteUpdate',votes=>{votes.forEach((n,i)=>{const e=document.getElementById('vc'+(i+1));if(e)e.querySelector('.voteCount').textContent=(n||0)+' vote'+((n||0)===1?'':'s')}}));
+ socket.on('voteResult',data=>{
+   clearInterval(voteInterval);document.getElementById('voteOverlay').classList.remove('show');
+   const u=data.card;if(u){applyUpgrade(u);player.hp=player.maxHp;}
+   spectating=false;player.hp=player.maxHp;player.shield=player.shieldMax||0;wave=data.round||wave+1;running=true;paused=false;gameOver=false;waveCleared=false;
+   document.getElementById('spectateBanner').classList.remove('show');spawnWave();
+ });
+ socket.on('reviveAll',data=>{player.hp=player.maxHp;player.shield=player.shieldMax||0;spectating=false;running=true;paused=false;gameOver=false;wave=data.round||wave;waveCleared=false;document.getElementById('spectateBanner').classList.remove('show');});
+ socket.on('allDead',()=>{spectating=false;gameOver=true;running=false;document.getElementById('finalStats').innerHTML=`Wave <b>${wave}</b> · <span style="color:#ff8fa3">The whole lobby was wiped out.</span>`;document.getElementById('gameover').style.display='grid'});
+ socket.on('hostChanged',id=>{onlineHost=id===socket.id;renderLobby()});
 }
-function sendOnlineState(){
- if(!socket||!onlineRoom||!player)return;
- socket.emit('playerState',{x:player.x,y:player.y,angle:Math.atan2(mouse.y-player.y,mouse.x-player.x),hp:player.hp,maxHp:player.maxHp,alive:player.hp>0});
-}
-setInterval(sendOnlineState,50);
-
-document.getElementById('createRoomBtn').onclick=()=>{if(socket)socket.emit('createRoom')};
-document.getElementById('joinRoomBtn').onclick=()=>{if(socket)socket.emit('joinRoom',document.getElementById('roomInput').value.trim().toUpperCase())};
+document.getElementById('saveUsernameBtn').onclick=()=>{onlineUsername=(document.getElementById('usernameInput').value.trim()||'Player').slice(0,16);localStorage.setItem('zs_username',onlineUsername);sendProfile();setLobbyStatus('Username saved as '+onlineUsername)};
+document.getElementById('createLobbyBtn').onclick=()=>socket&&socket.emit('createRoom');
+document.getElementById('joinLobbyBtn').onclick=()=>{const c=document.getElementById('joinCodeInput').value.trim().toUpperCase();if(socket)socket.emit('joinRoom',c)};
+startLobbyBtn.onclick=()=>{if(socket&&onlineRoom&&onlineHost)socket.emit('startGame')};
 
 // Verity boss artwork (embedded so the game stays a single self-contained HTML file).
 const verityImg=new Image();
@@ -554,7 +610,7 @@ const bossRoster=[
 function bossPool(){ return bossRoster; }
 function spawnZombie(){
  const pool=typePool();const t=pool[Math.floor(Math.random()*pool.length)];
- zombies.push(makeZ(t,1+Math.max(0,wave-1)*.085));
+ const people=Math.max(1,onlinePlayerCount); const coScale=1+(people-1)*.38; zombies.push(makeZ(t,(1+Math.max(0,wave-1)*.085)*coScale));
 }
 function spawnWave(){
  zombies=[];bullets=[];enemyBullets=[];effects=[];
@@ -562,7 +618,7 @@ function spawnWave(){
  for(let i=0;i<count;i++)spawnZombie();
  if(wave%5===0){
    const boss=bossPool()[Math.floor(Math.random()*bossPool().length)];
-   const bossScale=1+wave*.21;
+   const bossScale=(1+wave*.21)*(1+(Math.max(1,onlinePlayerCount)-1)*.42);
    const b=makeZ(boss,bossScale,W/2,-80);
    b.ability=1.6;b.beamTimer=2.4;b.mineTimer=2.8;
    zombies.push(b);
@@ -580,9 +636,16 @@ function damagePlayer(amount,source=''){
  player.hp-=amount;player.damageFlash=.22;player.combo=0;player.comboTimer=0;
  if(player.hp<=0){
   if(player.extraLife>0){player.extraLife--;player.hp=Math.max(1,player.maxHp*.4);player.shield=player.shieldMax;say('PHOENIX!');return}
-  player.hp=0;gameOver=true;running=false;paused=false;
-  document.getElementById('finalStats').innerHTML=`Wave <b>${wave}</b> · Kills <b>${kills}</b><br><span style="color:#aeb8c6">Your run ended. Pick different upgrades and try again.</span>`;
-  document.getElementById('gameover').style.display='grid';
+  player.hp=0;
+  if(onlineRoom&&socket){
+    spectating=true;running=true;paused=false;
+    document.getElementById('spectateBanner').classList.add('show');
+    socket.emit('playerDead');
+  }else{
+    gameOver=true;running=false;paused=false;
+    document.getElementById('finalStats').innerHTML=`Wave <b>${wave}</b> · Kills <b>${kills}</b><br><span style="color:#aeb8c6">Your run ended. Pick different upgrades and try again.</span>`;
+    document.getElementById('gameover').style.display='grid';
+  }
  }
 }
 function shoot(){
@@ -918,6 +981,7 @@ function update(dt){
  player.flash=Math.max(0,player.flash-dt*8);
  if(!running||paused||gameOver)return;
  player.moveMult=1;
+ if(spectating){ const live=Object.entries(onlinePlayers).find(([id,p])=>id!==socket?.id&&p.alive); if(live){player.x=live[1].x;player.y=live[1].y;} updateHud(); return; }
  if(player.frostTime>0){player.frostTime-=dt;if(player.frostTime<=0)player.moveMult=1}
  if(player.chronoSlowTime>0){player.chronoSlowTime-=dt;if(player.chronoSlowTime<=0)player.chronoSlow=1}
  if(player.webSlowTime>0)player.webSlowTime-=dt;
@@ -1215,21 +1279,6 @@ function drawZombie(z){
 function draw(){
  ctx.clearRect(0,0,W,H);
 
- // Draw remote players before local game objects so they participate visually in the same arena.
- for(const [id,p] of Object.entries(otherPlayers)){
-   if(!p||p.alive===false)continue;
-   ctx.save();ctx.translate(p.x,p.y);
-   const ang=Number(p.angle)||0;ctx.rotate(ang);
-   ctx.globalAlpha=.92;
-   ctx.fillStyle='#ff66cc';ctx.fillRect(-15,-15,30,30);
-   ctx.fillStyle='#ddd';ctx.fillRect(7,-3,24,6);
-   ctx.restore();
-   ctx.fillStyle='#ffb3e0';ctx.font='10px Arial';ctx.fillText('PLAYER',p.x-20,p.y-25);
-   ctx.fillStyle='#222';ctx.fillRect(p.x-25,p.y+22,50,5);
-   ctx.fillStyle='#ff66cc';ctx.fillRect(p.x-25,p.y+22,50*Math.max(0,Math.min(1,(p.hp||0)/(p.maxHp||100))),5);
- }
-
-
  // Animated arena background
  const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#0b111c');bg.addColorStop(1,'#121827');
  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
@@ -1332,6 +1381,27 @@ function draw(){
    }
  }
 
+
+ // ONLINE PLAYERS: each remote player uses that player's own saved rig colors.
+ if(onlineRoom){
+   for(const [id,rp] of Object.entries(onlinePlayers)){
+     if(id===socket?.id||!rp||!rp.alive)continue;
+     const rc=rp.customization||colorParts;
+     const rf=k=>{const c=rc[k]||{h:0,s:100,b:100};return `hue-rotate(${c.h||0}deg) saturate(${c.s||100}%) brightness(${c.b||100}%)`};
+     const part=(img,x,y,w,h,rot=0,flip=false,key=null)=>{if(!img?.complete||!img.naturalWidth)return;ctx.save();ctx.translate(x,y);ctx.rotate(rot);if(flip)ctx.scale(-1,1);ctx.filter=key?rf(key):'none';ctx.drawImage(img,-w/2,-h/2,w,h);ctx.restore()};
+     const a=Number(rp.angle)||0;
+     ctx.save();ctx.globalAlpha=.25;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(rp.x,rp.y+38,30,9,0,0,Math.PI*2);ctx.fill();ctx.restore();
+     part(legL,rp.x-11,rp.y+32,25,43,0,false,'legL');part(legR,rp.x+11,rp.y+32,25,43,0,false,'legR');
+     part(torsoImg,rp.x,rp.y+5,43,48,0,false,'torso');part(handL,rp.x-27,rp.y+10,27,46,0,false,'handL');
+     part(gunHandImg,rp.x+Math.cos(a)*39,rp.y+Math.sin(a)*39,42,33,a,false,'gun');
+     part(handR,rp.x+Math.cos(a)*23,rp.y+Math.sin(a)*23,40,24,a,false,'handR');
+     const left=Math.cos(a)<0;part(rp.low?lowHeadImg:headImg,rp.x+Math.cos(a)*4,rp.y-29,34,33,Math.atan2(Math.sin(a),Math.abs(Math.cos(a)))*.72,left,'head');
+     ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.textAlign='center';ctx.fillText(rp.username||'Player',rp.x,rp.y-50);
+     ctx.fillStyle='#171a20';ctx.fillRect(rp.x-25,rp.y+45,50,5);ctx.fillStyle='#ff66cc';ctx.fillRect(rp.x-25,rp.y+45,50*Math.max(0,Math.min(1,(rp.hp||0)/(rp.maxHp||100))),5);ctx.textAlign='left';
+   }
+ }
+
+ if(spectating)ctx.globalAlpha=.15;
  // PLAYER: layered sprite rig. Only the HEAD and RIGHT ARM/GUN aim at the mouse.
  // Legs, torso, and left hand stay oriented with the movement direction.
  const moving=!!(keys.d||keys.a||keys.w||keys.s||keys.arrowleft||keys.arrowright||keys.arrowup||keys.arrowdown);
@@ -1401,6 +1471,7 @@ function draw(){
    ctx.beginPath();ctx.arc(player.x,player.y,player.r+9+Math.sin(gameTime*5),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
  }
 
+ ctx.globalAlpha=1;
  // Damage vignette
  if(player.damageFlash>0){
    ctx.fillStyle='rgba(255,40,60,'+Math.min(.3,player.damageFlash*.25)+')';ctx.fillRect(0,0,W,H);
@@ -1430,6 +1501,18 @@ function chooseCards(){
  paused=true;waveCleared=false;const box=document.getElementById('cards');box.classList.add('show');
  const chosen=[];while(chosen.length<3){const c=makeCard();if(!chosen.some(x=>x.name===c.name))chosen.push(c)}
  chosen.forEach((u,i)=>{const el=document.getElementById('c'+(i+1));el.className='card '+u.rarity;el.innerHTML=`<div class="rarity">${u.rarity}</div><div class="icon">${u.icon}</div><h2>${u.name}</h2><p>${u.desc}</p><small>CHOOSE THIS UPGRADE</small>`;el.onclick=()=>{applyUpgrade(u);box.classList.remove('show');paused=false;wave++;spawnWave()}})
+}
+
+function showVote(cards,seconds=10){
+ voteCards=cards||[];voteChoice=-1;voteSeconds=seconds;
+ const ov=document.getElementById('voteOverlay');ov.classList.add('show');
+ document.getElementById('voteTimer').textContent=voteSeconds;
+ voteCards.forEach((u,i)=>{
+  const el=document.getElementById('vc'+(i+1));el.className='card voteCard '+u.rarity;
+  el.innerHTML=`<div class="rarity">${u.rarity}</div><div class="icon">${u.icon}</div><h2>${u.name}</h2><p>${u.desc}</p><div class="voteCount">0 votes</div>`;
+  el.onclick=()=>{if(voteChoice===i)return;voteChoice=i;document.querySelectorAll('.voteCard').forEach(x=>x.classList.remove('voted'));el.classList.add('voted');if(socket)socket.emit('vote',i)}
+ });
+ clearInterval(voteInterval);voteInterval=setInterval(()=>{voteSeconds--;document.getElementById('voteTimer').textContent=Math.max(0,voteSeconds);if(voteSeconds<=0)clearInterval(voteInterval)},1000);
 }
 
 const megaUpgradeEffects={'mega0':p=>{p.damage*=1+18/100},'mega1':p=>{p.reload*=Math.max(.45,1-12/100)},'mega2':p=>{p.speedMult*=1+15/100},'mega3':p=>{p.crit+= 7/100},'mega4':p=>{p.maxHp+=25;p.hp=clamp(p.hp+25,0,p.maxHp)},'mega5':p=>{p.bulletSpeed*=1+20/100},'mega6':p=>{p.bulletSize*=1+25/100},'mega7':p=>{p.pierce+=2},'mega8':p=>{p.shots+=1},'mega9':p=>{p.lifeSteal+= 5/100},'mega10':p=>{p.shieldMax+=30;p.shield=p.shieldMax},'mega11':p=>{p.enemySlow+= 10/100},'mega12':p=>{p.knockback+=18},'mega13':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega14':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+20/10},'mega15':p=>{p.dashChance+= 5/100},'mega16':p=>{p.regen+= 1},'mega17':p=>{p.boss=(p.boss||0)+55/100},'mega18':p=>{p.fastbuster=(p.fastbuster||0)+35/100},'mega19':p=>{p.tankbuster=(p.tankbuster||0)+35/100},'mega20':p=>{p.close=(p.close||0)+30/100},'mega21':p=>{p.far=(p.far||0)+25/100},'mega22':p=>{p.waveRunner=(p.waveRunner||0)+15/100},'mega23':p=>{p.comboPower=(p.comboPower||0)+12/100},'mega24':p=>{p.orbital=(p.orbital||0)+1},'mega25':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega26':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega27':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega28':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+20/100},'mega29':p=>{p.explosive=(p.explosive||0)+18/100},'mega30':p=>{p.damageTaken*=Math.max(.5,1-10/100)},'mega31':p=>{p.magnet+=(p.magnet||0)+35},'mega32':p=>{p.hp=clamp(p.hp+60,0,p.maxHp)},'mega33':p=>{p.critMult+=(p.critMult||2)*12/100},'mega34':p=>{p.fireRate+=(p.fireRate||0)+30/100},'mega35':p=>{p.extraLife++},'mega36':p=>{p.luck++},'mega37':p=>{p.thorns=(p.thorns||0)+1/10},'mega38':p=>{p.thorns=(p.thorns||0)+4/10},'mega39':p=>{p.healOnKill=(p.healOnKill||0)+5},'mega40':p=>{p.bulletLife*=1+18/100},'mega41':p=>{p.damage*=1+12/100},'mega42':p=>{p.reload*=Math.max(.45,1-15/100)},'mega43':p=>{p.speedMult*=1+7/100},'mega44':p=>{p.crit+= 25/100},'mega45':p=>{p.maxHp+=20;p.hp=clamp(p.hp+20,0,p.maxHp)},'mega46':p=>{p.bulletSpeed*=1+25/100},'mega47':p=>{p.bulletSize*=1+12/100},'mega48':p=>{p.pierce+=1},'mega49':p=>{p.shots+=1},'mega50':p=>{p.lifeSteal+= 30/100},'mega51':p=>{p.shieldMax+=10;p.shield=p.shieldMax},'mega52':p=>{p.enemySlow+= 18/100},'mega53':p=>{p.knockback+=20},'mega54':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega55':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+20/10},'mega56':p=>{p.dashChance+= 0/100},'mega57':p=>{p.regen+= 5},'mega58':p=>{p.boss=(p.boss||0)+35/100},'mega59':p=>{p.fastbuster=(p.fastbuster||0)+35/100},'mega60':p=>{p.tankbuster=(p.tankbuster||0)+30/100},'mega61':p=>{p.close=(p.close||0)+25/100},'mega62':p=>{p.far=(p.far||0)+15/100},'mega63':p=>{p.waveRunner=(p.waveRunner||0)+12/100},'mega64':p=>{p.comboPower=(p.comboPower||0)+15/100},'mega65':p=>{p.orbital=(p.orbital||0)+1},'mega66':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega67':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega68':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega69':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+18/100},'mega70':p=>{p.explosive=(p.explosive||0)+10/100},'mega71':p=>{p.damageTaken*=Math.max(.5,1-35/100)},'mega72':p=>{p.magnet+=(p.magnet||0)+60},'mega73':p=>{p.hp=clamp(p.hp+12,0,p.maxHp)},'mega74':p=>{p.critMult+=(p.critMult||2)*30/100},'mega75':p=>{p.fireRate+=(p.fireRate||0)+20/100},'mega76':p=>{p.extraLife++},'mega77':p=>{p.luck++},'mega78':p=>{p.thorns=(p.thorns||0)+4/10},'mega79':p=>{p.thorns=(p.thorns||0)+20/10},'mega80':p=>{p.healOnKill=(p.healOnKill||0)+4},'mega81':p=>{p.bulletLife*=1+12/100},'mega82':p=>{p.damage*=1+15/100},'mega83':p=>{p.reload*=Math.max(.45,1-7/100)},'mega84':p=>{p.speedMult*=1+25/100},'mega85':p=>{p.crit+= 20/100},'mega86':p=>{p.maxHp+=25;p.hp=clamp(p.hp+25,0,p.maxHp)},'mega87':p=>{p.bulletSpeed*=1+12/100},'mega88':p=>{p.bulletSize*=1+10/100},'mega89':p=>{p.pierce+=1},'mega90':p=>{p.shots+=2},'mega91':p=>{p.lifeSteal+= 10/100},'mega92':p=>{p.shieldMax+=18;p.shield=p.shieldMax},'mega93':p=>{p.enemySlow+= 20/100},'mega94':p=>{p.knockback+=20},'mega95':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega96':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+2/10},'mega97':p=>{p.dashChance+= 13/100},'mega98':p=>{p.regen+= 3},'mega99':p=>{p.boss=(p.boss||0)+35/100},'mega100':p=>{p.fastbuster=(p.fastbuster||0)+30/100},'mega101':p=>{p.tankbuster=(p.tankbuster||0)+25/100},'mega102':p=>{p.close=(p.close||0)+15/100},'mega103':p=>{p.far=(p.far||0)+12/100},'mega104':p=>{p.waveRunner=(p.waveRunner||0)+15/100},'mega105':p=>{p.comboPower=(p.comboPower||0)+22/100},'mega106':p=>{p.orbital=(p.orbital||0)+1},'mega107':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega108':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega109':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega110':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+10/100},'mega111':p=>{p.explosive=(p.explosive||0)+35/100},'mega112':p=>{p.damageTaken*=Math.max(.5,1-60/100)},'mega113':p=>{p.magnet+=(p.magnet||0)+12},'mega114':p=>{p.hp=clamp(p.hp+30,0,p.maxHp)},'mega115':p=>{p.critMult+=(p.critMult||2)*20/100},'mega116':p=>{p.fireRate+=(p.fireRate||0)+1/100},'mega117':p=>{p.extraLife++},'mega118':p=>{p.luck++},'mega119':p=>{p.thorns=(p.thorns||0)+20/10}};
@@ -1515,6 +1598,12 @@ function fillCodex(){
  const list=document.getElementById('zlist');list.innerHTML='';
  zombieTypes.forEach(t=>{const [name,desc,kind,hp,speed,r,col]=t;const d=document.createElement('div');d.className='zitem';d.innerHTML=`<div class="zname">${name}</div><div class="zdesc">${desc}</div><div class="pill">HP ${hp} · SPEED ${speed}</div>`;list.appendChild(d)})
 }
+
+setInterval(()=>{
+ if(!socket||!onlineRoom||!player)return;
+ socket.emit('playerState',{x:player.x,y:player.y,angle:player.angle,hp:player.hp,maxHp:player.maxHp,alive:player.hp>0,spectating,customization:colorParts});
+},50);
+
 function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(k==='escape'&&running){paused=!paused;document.getElementById('codex').style.display=paused?'grid':'none'}if(k===' '||k.startsWith('arrow'))e.preventDefault()});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
@@ -1536,12 +1625,12 @@ document.querySelectorAll('.card').forEach(card=>{
 document.getElementById('customizeBtn').onclick=()=>document.getElementById('customize').classList.remove('modalHidden');
 document.getElementById('closeCustomize').onclick=()=>document.getElementById('customize').classList.add('modalHidden');
 document.getElementById('resetColors').onclick=resetColors;
-document.getElementById('startBtn').onclick=()=>{document.getElementById('start').classList.add('hidden');running=true;wave=1;waveCleared=false;discoveredZombies.clear();zombieNoticeQueue.length=0;zombieNoticeBusy=false;document.getElementById('newZombie').classList.remove('show');spawnWave()};
+document.getElementById('startBtn').onclick=()=>{if(socket){onlineLobby.classList.remove('hidden');renderLobby();return;} document.getElementById('start').classList.add('hidden');running=true;wave=1;waveCleared=false;spawnWave()};
 document.getElementById('codexBtn').onclick=()=>document.getElementById('codex').style.display='grid';
 document.getElementById('closeCodex').onclick=()=>document.getElementById('codex').style.display='none';
 document.getElementById('restart').onclick=()=>location.reload();
 document.getElementById('goMenu').onclick=()=>location.reload();
-fillCodex();updateHud();requestAnimationFrame(loop);
+if(socket){document.getElementById('start').classList.add('hidden');onlineLobby.classList.remove('hidden');} fillCodex();updateHud();requestAnimationFrame(loop);
 </script>
 </body>
 </html>
