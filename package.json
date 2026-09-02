@@ -1,8 +1,13 @@
 {
-  "name":"zombie-survivor-online",
-  "version":"1.1.0",
-  "private":true,
-  "main":"server.js",
-  "scripts":{"start":"node server.js"},
-  "dependencies":{"express":"^4.21.2","socket.io":"^4.8.1"}
+  "name": "zombie-survivor-online",
+  "version": "2.0.0",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
 }
