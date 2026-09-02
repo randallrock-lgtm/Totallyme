@@ -1,24 +1,7 @@
-# Zombie Survivor Online
+[README.md](https://github.com/user-attachments/files/31760626/README.md)
+# Zombie Survivor Online v2
+Actual Zombie Survivor game with online co-op lobby, usernames, per-player customization, team voting, scaling enemies, spectating, and round revives.
 
-Internet multiplayer starter for the Zombie Survivor HTML game.
-
-## Files
-
-- `public/index.html` — browser game client
-- `server.js` — Node.js + Socket.IO multiplayer server
-- `package.json` — server dependencies
-
-## Local test
-
-```bash
-npm install
-npm start
-```
-
-Open `http://localhost:3000` in two browser tabs and use Create Room / Join Room.
-
-## Online hosting
-
-Deploy this project to a Node.js host such as Render. The server listens on the host-provided `PORT`.
-
-This is a multiplayer foundation. Your full existing Zombie Survivor game systems (custom sprites, upgrades, bosses, Verity, etc.) can be merged into the client/server architecture afterward.
+Render:
+Build command: npm install
+Start command: npm start
