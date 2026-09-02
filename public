@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Zombie Survivor Online</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    html,body{margin:0;height:100%;background:#111;color:white;font-family:Arial,sans-serif}
+    #game{display:block;margin:auto;background:#191919;width:min(100vw,1100px);height:auto}
+    #ui{position:fixed;top:12px;left:12px;background:#000b;padding:12px;border-radius:10px}
+    input,button{padding:9px;margin:3px;border-radius:7px;border:0}
+    button{cursor:pointer}
+    #status{margin-top:7px;font-size:14px}
+  </style>
+</head>
+<body>
+<canvas id="game" width="1100" height="700"></canvas>
+<div id="ui">
+  <button id="create">CREATE ROOM</button>
+  <input id="room" maxlength="8" placeholder="Room code">
+  <button id="join">JOIN ROOM</button>
+  <div id="status">Not connected</div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
+const status=document.getElementById("status");
+const SERVER_URL=location.origin;
+const socket=io(SERVER_URL,{transports:["websocket","polling"]});
+let myId=null, roomCode=null;
+const players={};
+
+socket.on("connect",()=>{myId=socket.id;status.textContent="Connected — create or join a room";});
+socket.on("connect_error",()=>status.textContent="Could not connect to server");
+socket.on("roomCreated",c=>{roomCode=c;status.textContent="Room: "+c+" — send this code to a friend";});
+socket.on("joinedRoom",c=>{roomCode=c;status.textContent="Joined room: "+c;});
+socket.on("roomError",m=>status.textContent=m);
+socket.on("state",state=>{
+  for(const id in players) delete players[id];
+  Object.assign(players,state.players);
+  draw(state);
+});
+
+document.getElementById("create").onclick=()=>socket.emit("createRoom");
+document.getElementById("join").onclick=()=>socket.emit("joinRoom",document.getElementById("room").value.trim().toUpperCase());
+
+const keys={};
+addEventListener("keydown",e=>keys[e.key.toLowerCase()]=true);
+addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+
+let mouse={x:550,y:350,down:false};
+canvas.addEventListener("mousemove",e=>{
+  const r=canvas.getBoundingClientRect();
+  mouse.x=(e.clientX-r.left)*canvas.width/r.width;
+  mouse.y=(e.clientY-r.top)*canvas.height/r.height;
+});
+canvas.addEventListener("mousedown",()=>mouse.down=true);
+addEventListener("mouseup",()=>mouse.down=false);
+
+setInterval(()=>{
+  if(!roomCode)return;
+  let dx=(keys.d?1:0)-(keys.a?1:0),dy=(keys.s?1:0)-(keys.w?1:0);
+  const len=Math.hypot(dx,dy)||1;if(dx||dy){dx/=len;dy/=len;}
+  socket.emit("input",{dx,dy,aim:Math.atan2(mouse.y-350,mouse.x-550),shoot:mouse.down});
+},50);
+
+function draw(state){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#202020";ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle="#292929";
+  for(let x=0;x<1100;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,700);ctx.stroke();}
+  for(let y=0;y<700;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(1100,y);ctx.stroke();}
+
+  for(const z of state.zombies){
+    ctx.fillStyle="#55b84a";ctx.beginPath();ctx.arc(z.x,z.y,16,0,Math.PI*2);ctx.fill();
+  }
+  for(const b of state.bullets){
+    ctx.fillStyle="#ffd84a";ctx.beginPath();ctx.arc(b.x,b.y,4,0,Math.PI*2);ctx.fill();
+  }
+  for(const [id,p] of Object.entries(state.players)){
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);
+    ctx.fillStyle=id===myId?"#42a5ff":"#ff66cc";
+    ctx.fillRect(-15,-15,30,30);
+    ctx.fillStyle="#ddd";ctx.fillRect(7,-3,22,6);
+    ctx.restore();
+    ctx.fillStyle="white";ctx.fillText(id===myId?"YOU":"PLAYER",p.x-24,p.y-24);
+    ctx.fillStyle="#222";ctx.fillRect(p.x-25,p.y+22,50,6);
+    ctx.fillStyle="#45e060";ctx.fillRect(p.x-25,p.y+22,50*Math.max(0,p.hp/p.maxHp),6);
+  }
+  ctx.fillStyle="white";ctx.font="20px Arial";
+  ctx.fillText("Wave "+state.wave+"   Players: "+Object.keys(state.players).length,20,680);
+}
+</script>
+</body>
+</html>
