@@ -38,7 +38,7 @@ h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10
 @media(max-width:800px){#cards{grid-template-columns:1fr;padding:20px;overflow:auto}.card{min-height:220px}#zlist{grid-template-columns:1fr 1fr}.panel{min-width:0}h1{font-size:36px}}
 </style>
 <style>
-#onlineLobby{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.88);z-index:100;backdrop-filter:blur(7px)}
+#onlineLobby{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.88);z-index:100;backdrop-filter:blur(7px);pointer-events:auto} .lobbyBox{pointer-events:auto}
 #onlineLobby.hidden{display:none}.lobbyBox{width:min(760px,92vw);background:#101722;border:1px solid #3a465a;border-radius:20px;padding:28px;box-shadow:0 25px 80px #000}
 .lobbyRow{display:flex;gap:8px;margin-top:12px}.lobbyRow input{flex:1;background:#080d14;color:#fff;border:1px solid #354257;border-radius:9px;padding:12px}.playersList{margin-top:16px;border:1px solid #303b4d;border-radius:12px;padding:12px;background:#0a0f17}.pl{display:flex;justify-content:space-between;padding:7px;border-bottom:1px solid #202938}.pl:last-child{border:0}.ready{color:#5ee67b;font-weight:900}.waiting{color:#ffd34f;font-weight:900}#lobbyMsg{margin-top:10px;color:#aeb8c6}#countdownOnline{font-size:72px;text-align:center;font-weight:900;color:#ffd34f;margin-top:8px}.onlineCode{font-size:24px;font-weight:900;letter-spacing:4px;color:#8eeaff}
 #spectatorOverlay{display:none;position:absolute;inset:0;z-index:90;place-items:center;background:rgba(0,0,0,.18);pointer-events:none}.specOn{display:grid!important}.specCard{background:#090d14e8;border:1px solid #40506a;border-radius:16px;padding:20px;text-align:center}.specCard h2{margin:0}.specCard p{color:#b7c1cf}
@@ -1479,7 +1479,7 @@ function fillCodex(){
  zombieTypes.forEach(t=>{const [name,desc,kind,hp,speed,r,col]=t;const d=document.createElement('div');d.className='zitem';d.innerHTML=`<div class="zname">${name}</div><div class="zdesc">${desc}</div><div class="pill">HP ${hp} · SPEED ${speed}</div>`;list.appendChild(d)})
 }
 function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(k==='escape'&&running){paused=!paused;document.getElementById('codex').style.display=paused?'grid':'none'}if(k===' '||k.startsWith('arrow'))e.preventDefault()});
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(k==='escape'&&running && !document.getElementById('cards')?.classList.contains('show')){paused=!paused}if(k===' '||k.startsWith('arrow'))e.preventDefault()});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();mouse.x=(e.clientX-r.left)*W/r.width;mouse.y=(e.clientY-r.top)*H/r.height});
 canvas.addEventListener('mousedown',()=>mouse.down=true);addEventListener('mouseup',()=>mouse.down=false);
@@ -1563,42 +1563,5 @@ const oldDrawOnline=draw;
 draw=function(){oldDrawOnline();if(onlineRoom){for(const z of onlineZombies){ctx.save();ctx.fillStyle='#55b84a';ctx.beginPath();ctx.arc(z.x,z.y,16,0,Math.PI*2);ctx.fill();ctx.restore()}for(const p of Object.values(onlineRemote)){if(p.id===onlineId||!p.alive)continue;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle||0);ctx.fillStyle='#ff66cc';ctx.fillRect(-14,-12,28,24);ctx.fillStyle='#ddd';ctx.fillRect(7,-3,22,6);ctx.restore();ctx.fillStyle='#fff';ctx.font='11px Arial';ctx.textAlign='center';ctx.fillText(p.username,p.x,p.y-28);ctx.textAlign='left'}}};
 </script>
 
-<script>
-/* ONLINE BRIDGE */
-const net=typeof io==='function'?io():null;
-let netRoom='',netId='',netSpectating=false,netVote=null,netRerolls=3,netZombies=[];
-const netPanel=document.getElementById('onlinePanel'), netMsg=document.getElementById('onlineMsg');
-const say=t=>{if(netMsg)netMsg.textContent=t};
-function lobbyDraw(ps){
- const list=document.getElementById('roomList'); if(!list)return;
- list.innerHTML=Object.values(ps||{}).map(p=>`<div class="roomPlayer"><span>${p.username||'Player'}</span><span class="${p.ready?'ready':'notready'}">${p.ready?'READY':'NOT READY'}</span></div>`).join('')||'No players yet.';
- const a=document.getElementById('lobbyActions');a.innerHTML='';
- if(netRoom){let b=document.createElement('button');b.textContent='READY UP';b.onclick=()=>net.emit('readyToggle');a.appendChild(b);if(net._host){let x=document.createElement('button');x.textContent='START WHEN READY';x.onclick=()=>net.emit('hostStart');a.appendChild(x)}}
-}
-if(net){
- net.on('connect',()=>{netId=net.id;say('🟢 Connected. Set your username.');net.emit('setUsername',localStorage.getItem('zsName')||'Player')});
- net.on('roomCreated',c=>{netRoom=c;net._host=true;say('Lobby created. Share code: '+c)});
- net.on('joinedRoom',c=>{netRoom=c;net._host=false;say('Joined lobby: '+c)});
- net.on('roomError',say);
- net.on('lobbyState',d=>{netRoom=d.code||netRoom;net._host=d.hostId===netId;lobbyDraw(d.players)});
- net.on('countdown',n=>{const e=document.getElementById('countdown');if(e)e.textContent=n>0?n:'GO!'});
- net.on('roundStart',d=>{netPanel.classList.add('hidden');netSpectating=false;document.getElementById('spectator')?.classList.remove('show');running=true;paused=false;wave=d.wave||wave});
- net.on('remotePlayers',ps=>window.netPlayers=ps||{});
- net.on('authoritativeZombies',zs=>window.netZombies=zs||[]);
- net.on('playerDown',id=>{if(id===netId){netSpectating=true;running=false;paused=true;document.getElementById('spectator')?.classList.add('show')}});
- net.on('roundCleared',d=>{netSpectating=false;running=false;paused=true;document.getElementById('spectator')?.classList.remove('show');document.getElementById('cards')?.classList.add('show');showNetCards(d.cards,d.voteId);});
- net.on('cardVoteState',d=>{netVote=d;showNetCards(d.cards,d.id||d.voteId)});
- net.on('cardVoteResult',d=>{if(typeof applyUpgrade==='function')applyUpgrade(d.card);document.getElementById('cards')?.classList.remove('show');netVote=null});
- net.on('rerollState',d=>{netRerolls=d.left;const b=document.getElementById('rerollVote');if(b){b.textContent='🔄 VOTE TO REROLL ('+netRerolls+' LEFT)';b.classList.toggle('show',netRerolls>0)}});
- net.on('gameOver',()=>{running=false;paused=true;document.getElementById('gameover').style.display='grid'});
-}
-document.getElementById('saveNameBtn')?.addEventListener('click',()=>{let n=(document.getElementById('usernameInput').value||'Player').trim().slice(0,16)||'Player';localStorage.setItem('zsName',n);net?.emit('setUsername',n);say('Username: '+n)});
-if(document.getElementById('usernameInput'))document.getElementById('usernameInput').value=localStorage.getItem('zsName')||'';
-document.getElementById('createRoomBtn')?.addEventListener('click',()=>net?.emit('createRoom'));
-document.getElementById('joinRoomBtn')?.addEventListener('click',()=>net?.emit('joinRoom',(document.getElementById('roomInput').value||'').trim().toUpperCase()));
-function showNetCards(cs,id){netVote=netVote||{};netVote.id=id;const el=[c1,c2,c3];cs.forEach((c,i)=>{el[i].innerHTML=`<div class="rarity">${c.rarity}</div><div class="icon">${c.icon}</div><h2>${c.name}</h2><p>${c.desc}</p><small>VOTES: ${(netVote.votes||{})[i]||0}</small>`;el[i].onclick=()=>net?.emit('cardVote',{voteId:id,index:i})});const end=Date.now()+10000;setTimeout(()=>{},10000)}
-document.getElementById('rerollVote')?.addEventListener('click',()=>net?.emit('rerollVote',{voteId:netVote?.id}));
-setInterval(()=>{if(net&&netRoom&&!netSpectating&&typeof player!=='undefined')net.emit('input',{dx:((keys.d||keys.ArrowRight)?1:0)-((keys.a||keys.ArrowLeft)?1:0),dy:((keys.s||keys.ArrowDown)?1:0)-((keys.w||keys.ArrowUp)?1:0),aim:player.angle||0,shoot:!!mouse.down,custom:window.customization||{}})},50);
-</script>
 </body>
 </html>
