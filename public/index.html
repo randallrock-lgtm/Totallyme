@@ -36,29 +36,24 @@ h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10
 #gameover{display:none}.over{text-align:center}.over h2{font-size:58px;margin:0 0 10px;color:#ff6470}#customize{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.82);backdrop-filter:blur(5px);z-index:40}.modalHidden{display:none!important}.customizeBox{width:min(820px,94vw)}#customParts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.previewWrap{margin-top:16px;border:1px solid #303b4d;border-radius:16px;background:radial-gradient(circle at 50% 35%,#202d42,#080c12 72%);padding:12px;text-align:center}.previewTitle{font-size:12px;font-weight:900;letter-spacing:2px;color:#8eeaff;margin-bottom:4px}.previewWrap canvas{width:360px;max-width:100%;height:auto;border:1px solid #334057;border-radius:12px;background:transparent;display:block;margin:auto}.previewHint{font-size:11px;color:#8793a5;margin-top:5px}.partControl{padding:12px;border:1px solid #303b4d;border-radius:12px;background:#0c121b}.partHead{display:flex;justify-content:space-between;align-items:center;font-weight:900;margin-bottom:8px}.swatch{width:18px;height:18px;border-radius:50%;border:1px solid #fff5;display:inline-block}.rangeRow{display:grid;grid-template-columns:80px 1fr 42px;gap:8px;align-items:center;margin:5px 0;font-size:11px;color:#aeb8c6}.rangeRow input{width:100%}@media(max-width:800px){#customParts{grid-template-columns:1fr}}
 
 @media(max-width:800px){#cards{grid-template-columns:1fr;padding:20px;overflow:auto}.card{min-height:220px}#zlist{grid-template-columns:1fr 1fr}.panel{min-width:0}h1{font-size:36px}}
-
-#onlineLobby{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,7,12,.82);backdrop-filter:blur(8px)}
-#onlineLobby.hidden{display:none}
-.lobbyBox{width:min(680px,92vw);max-height:88vh;overflow:auto;background:#101722;border:1px solid #34445c;border-radius:20px;padding:24px;box-shadow:0 30px 80px #000b}
-.lobbyBox h2{margin:0 0 4px;font-size:28px}.lobbySub{color:#9daabc;font-size:13px;margin-bottom:16px}
-.lobbyName{display:flex;gap:8px;margin-bottom:14px}.lobbyName input,.lobbyCode{flex:1;background:#0a0f17;color:#fff;border:1px solid #3a4b64;border-radius:9px;padding:11px}
-.lobbyBtns{display:flex;gap:8px;flex-wrap:wrap}.lobbyBtns button{padding:10px 14px}
-.lobbyCodeRow{display:flex;gap:8px;margin-top:10px}.lobbyCodeRow input{max-width:170px;text-transform:uppercase}
-.lobbyPlayers{margin-top:16px;border-top:1px solid #263347;padding-top:12px}
-.lobbyPlayer{display:flex;align-items:center;gap:9px;padding:7px 0}.hostBadge{font-size:9px;padding:3px 6px;border-radius:5px;background:#3b6cff}
-.lobbyRigDot{width:12px;height:12px;border-radius:50%;background:#ff66cc;display:inline-block}
-.lobbyStatus{margin-top:12px;color:#b8c5d8;font-size:12px}.lobbyStart{margin-top:15px;width:100%;font-weight:900}
-#voteOverlay{position:fixed;inset:0;z-index:280;display:none;align-items:center;justify-content:center;background:rgba(3,6,10,.78)}
-#voteOverlay.show{display:flex}.voteBox{width:min(900px,94vw);background:#101722;border:1px solid #3c4d67;border-radius:20px;padding:20px;text-align:center}
-.voteTimer{font-size:26px;font-weight:900;color:#ffe37a}.voteCards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:15px}.voteCard{cursor:pointer;min-height:180px}.voteCard.voted{outline:3px solid #73e6ff}
-.voteCount{font-size:12px;color:#9eeaff;margin-top:7px}.spectateBanner{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:260;background:#101722dd;border:1px solid #ff6688;color:#ffb3c3;border-radius:999px;padding:9px 16px;font-weight:900;display:none}
-.spectateBanner.show{display:block}
-@media(max-width:700px){.voteCards{grid-template-columns:1fr}.voteCard{min-height:130px}}
 </style>
-<script src="/socket.io/socket.io.js"></script>
-</head>
+<style>
+#onlineLobby{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.88);z-index:100;backdrop-filter:blur(7px)}
+#onlineLobby.hidden{display:none}.lobbyBox{width:min(760px,92vw);background:#101722;border:1px solid #3a465a;border-radius:20px;padding:28px;box-shadow:0 25px 80px #000}
+.lobbyRow{display:flex;gap:8px;margin-top:12px}.lobbyRow input{flex:1;background:#080d14;color:#fff;border:1px solid #354257;border-radius:9px;padding:12px}.playersList{margin-top:16px;border:1px solid #303b4d;border-radius:12px;padding:12px;background:#0a0f17}.pl{display:flex;justify-content:space-between;padding:7px;border-bottom:1px solid #202938}.pl:last-child{border:0}.ready{color:#5ee67b;font-weight:900}.waiting{color:#ffd34f;font-weight:900}#lobbyMsg{margin-top:10px;color:#aeb8c6}#countdownOnline{font-size:72px;text-align:center;font-weight:900;color:#ffd34f;margin-top:8px}.onlineCode{font-size:24px;font-weight:900;letter-spacing:4px;color:#8eeaff}
+#spectatorOverlay{display:none;position:absolute;inset:0;z-index:90;place-items:center;background:rgba(0,0,0,.18);pointer-events:none}.specOn{display:grid!important}.specCard{background:#090d14e8;border:1px solid #40506a;border-radius:16px;padding:20px;text-align:center}.specCard h2{margin:0}.specCard p{color:#b7c1cf}
+#rerollBtn{display:none;position:absolute;z-index:110;bottom:22px;left:50%;transform:translateX(-50%);background:#263247;color:#fff}
+#rerollBtn.show{display:block}
+</style><script src="/socket.io/socket.io.js"></script></head>
 <body>
-<div id="wrap">
+<div id="wrap"><div id="onlineLobby">
+<div class="lobbyBox"><h1>🌐 ONLINE LOBBY</h1><div class="sub">Everyone must press READY. Then the host starts the 5-second countdown.</div>
+<div class="lobbyRow"><input id="usernameInput" maxlength="16" placeholder="Username"><button id="nameBtn">SET NAME</button></div>
+<div class="lobbyRow"><button id="createBtn">CREATE LOBBY</button><input id="roomInput" maxlength="8" placeholder="ROOM CODE"><button id="joinBtn">JOIN</button></div>
+<div id="playersList" class="playersList">Create or join a lobby.</div><div id="lobbyActions" class="buttons"></div><div id="lobbyMsg"></div><div id="countdownOnline"></div></div></div>
+<div id="spectatorOverlay"><div><h2>👻 SPECTATING</h2><p>You are down for this round. You will revive when your team clears it.</p></div></div>
+<button id="rerollBtn">🔄 VOTE TO REROLL (3 LEFT)</button>
+
 <canvas id="game" width="1100" height="700"></canvas>
 
 <div id="hud">
@@ -68,96 +63,23 @@ h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10
 </div>
 <div id="message"></div>
 <div id="newZombie"><canvas id="zPreview" width="82" height="82"></canvas><div><div class="nzTitle">NEW ENEMY DISCOVERED</div><div class="nzName" id="nzName"></div><div class="nzDesc" id="nzDesc"></div><div class="nzStats" id="nzStats"></div></div></div>
-<div id="hint">WASD / Arrow Keys move · Mouse aim · Hold SPACE or click to fire · ESC opens Codex</div>
+<div id="hint">WASD / Arrow Keys move · Mouse aim · Hold SPACE or click to fire</div>
 
-
-<div id="onlineLobby">
- <div class="lobbyBox">
-  <h2>🌐 ONLINE CO-OP LOBBY</h2>
-  <div class="lobbySub">Set your username, create a lobby, invite friends, then the host starts the run when everyone is ready.</div>
-  <div class="lobbyName"><input id="usernameInput" maxlength="16" placeholder="Username"><button id="saveUsernameBtn">SAVE</button></div>
-  <div class="lobbyBtns"><button id="createLobbyBtn">CREATE LOBBY</button></div>
-  <div class="lobbyCodeRow"><input id="joinCodeInput" class="lobbyCode" maxlength="8" placeholder="ROOM CODE"><button id="joinLobbyBtn">JOIN LOBBY</button></div>
-  <div class="lobbyStatus" id="lobbyStatus">Connecting...</div>
-  <div class="lobbyPlayers"><b>PLAYERS</b><div id="lobbyPlayersList">No lobby yet.</div></div>
-  <button id="startLobbyBtn" class="lobbyStart" disabled>START RUN — HOST ONLY</button>
- </div>
-</div>
-<div id="voteOverlay">
- <div class="voteBox">
-  <h2>🎴 TEAM UPGRADE VOTE</h2>
-  <div>Everyone votes. After <b>10 seconds</b>, the card with the most votes is given to <b>everyone</b>.</div>
-  <div class="voteTimer" id="voteTimer">10</div>
-  <div class="voteCards"><div class="card voteCard" id="vc1"></div><div class="card voteCard" id="vc2"></div><div class="card voteCard" id="vc3"></div></div>
- </div>
-</div>
-<div id="spectateBanner" class="spectateBanner">👻 SPECTATING — WAIT FOR YOUR TEAM TO CLEAR THE ROUND</div>
 <div id="start"><div class="box">
 <h1>☣ ZOMBIE SURVIVOR</h1><div class="sub">CHAOS EDITION — every run is different.</div>
 <p>Survive escalating waves, choose <b>1 of 3 random upgrades</b> after every wave, and learn enemy types in the Zombie Codex, including multiple deadly bosses and the Verity boss.</p>
-<div class="buttons"><button id="startBtn">START RUN</button><button class="alt" id="customizeBtn">🎨 CUSTOMIZE</button><button class="alt" id="codexBtn">ZOMBIE CODEX</button></div>
+<div class="buttons"><button id="startBtn">START RUN</button><button class="alt" id="customizeBtn">🎨 CUSTOMIZE</button></div>
 </div></div>
 
 <div id="cards"><div class="card" id="c1"></div><div class="card" id="c2"></div><div class="card" id="c3"></div></div>
 
-<div id="customize" class="modalHidden"><div class="box customizeBox"><h2>🎨 Character Customization</h2><div class="sub">See the actual player sprites together while you customize every part.</div><div class="previewWrap"><div class="previewTitle">LIVE CHARACTER PREVIEW</div><canvas id="customPreview" width="360" height="300"></canvas><div class="previewHint">Your real in-game sprites are used here.</div></div><div id="customParts"></div><div class="buttons"><button id="resetColors" class="alt">RESET COLORS</button><button id="closeCustomize">DONE</button></div></div></div>
-
-<div id="codex"><div class="box"><h2>🧟 Zombie Codex</h2><div class="sub">Every enemy has its own behavior. New types become more common as waves rise.</div><div id="zlist"></div><div class="buttons"><button class="alt" id="closeCodex">CLOSE</button></div></div></div>
+<div id="customize" class="modalHidden"><div class="box customizeBox"><h2>🎨 Character Customization</h2><div class="sub">See the actual player sprites together while you customize every part.</div><div class="previewWrap"><div class="previewTitle">LIVE CHARACTER PREVIEW</div><canvas id="customPreview" width="360" height="300"></canvas><div class="previewHint">Your real in-game sprites are used here.</div></div><div id="customParts"></div><div class="buttons"><button id="resetColors" class="alt">RESET COLORS</button><button id="closeCustomize">DONE</button></div></div></div></div>
 
 <div id="gameover"><div class="box over"><h2>YOU DIED</h2><div id="finalStats"></div><div class="buttons" style="justify-content:center"><button id="restart">RUN IT BACK</button><button class="alt" id="goMenu">MENU</button></div></div></div>
 </div>
 
 <script>
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
-const socket=typeof io==='function'?io():null;
-let onlineRoom='',onlineHost=false,onlineStarted=false,onlinePlayerCount=1,onlinePlayers={},onlineUsername=localStorage.getItem('zs_username')||'Player',spectating=false;
-let voteCards=[],voteChoice=-1,voteSeconds=0,voteInterval=null,onlineRound=1;
-const onlineLobby=document.getElementById('onlineLobby'), lobbyStatus=document.getElementById('lobbyStatus'), lobbyList=document.getElementById('lobbyPlayersList'), startLobbyBtn=document.getElementById('startLobbyBtn');
-document.getElementById('usernameInput').value=onlineUsername;
-function setLobbyStatus(x){lobbyStatus.textContent=x}
-function renderLobby(){
- const ids=Object.keys(onlinePlayers);
- onlinePlayerCount=Math.max(1,ids.length);
- lobbyList.innerHTML=ids.length?ids.map(id=>{
-   const p=onlinePlayers[id]||{}; return `<div class="lobbyPlayer"><span class="lobbyRigDot"></span><b>${escapeHtml(p.username||'Player')}</b>${id===p.hostId?'<span class="hostBadge">HOST</span>':''}${p.ready?' <span style="color:#79ffb0">✓</span>':''}</div>`;
- }).join(''):'No lobby yet.';
- startLobbyBtn.disabled=!onlineHost||ids.length<1||onlineStarted;
- startLobbyBtn.textContent=onlineHost?(onlineStarted?'RUN STARTED':'START RUN — HOST ONLY'):'WAITING FOR HOST';
-}
-function escapeHtml(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function sendProfile(){
- if(!socket||!onlineRoom)return;
- socket.emit('profile',{username:onlineUsername,customization:colorParts});
-}
-if(socket){
- socket.on('connect',()=>setLobbyStatus('🟢 Connected. Create a lobby or join one.'));
- socket.on('connect_error',()=>setLobbyStatus('🔴 Could not connect to multiplayer server.'));
- socket.on('disconnect',()=>setLobbyStatus('🔴 Disconnected.'));
- socket.on('roomCreated',code=>{onlineRoom=code;onlineHost=true;setLobbyStatus('Lobby created. Share code '+code);sendProfile()});
- socket.on('joinedRoom',code=>{onlineRoom=code;onlineHost=false;setLobbyStatus('Joined lobby '+code);sendProfile()});
- socket.on('roomError',m=>setLobbyStatus('⚠️ '+m));
- socket.on('lobbyState',st=>{onlinePlayers=st.players||{};onlineHost=st.hostId===socket.id;onlineStarted=!!st.started;onlineRound=st.round||1;renderLobby();
-   if(onlineStarted){onlineLobby.classList.add('hidden');document.getElementById('start').classList.add('hidden');running=true;}
- });
- socket.on('remoteState',st=>{onlinePlayers=st.players||{};renderLobby()});
- socket.on('gameStarted',st=>{onlineStarted=true;onlineRound=st.round||1;onlineLobby.classList.add('hidden');document.getElementById('start').classList.add('hidden');running=true;wave=onlineRound;waveCleared=false;gameOver=false;spectating=false;document.getElementById('spectateBanner').classList.remove('show');spawnWave()});
- socket.on('roundVote',data=>showVote(data.cards,data.seconds||10));
- socket.on('voteUpdate',votes=>{votes.forEach((n,i)=>{const e=document.getElementById('vc'+(i+1));if(e){const c=e.querySelector('.voteCount');if(c)c.textContent=(n||0)+' vote'+((n||0)===1?'':'s');}});});
- socket.on('voteResult',data=>{
-   clearInterval(voteInterval);document.getElementById('voteOverlay').classList.remove('show');
-   const u=data.card;if(u){applyUpgrade(u);player.hp=player.maxHp;}
-   spectating=false;player.hp=player.maxHp;player.shield=player.shieldMax||0;wave=data.round||wave+1;running=true;paused=false;gameOver=false;waveCleared=false;
-   document.getElementById('spectateBanner').classList.remove('show');spawnWave();
- });
- socket.on('reviveAll',data=>{player.hp=player.maxHp;player.shield=player.shieldMax||0;spectating=false;running=true;paused=false;gameOver=false;wave=data.round||wave;waveCleared=false;document.getElementById('spectateBanner').classList.remove('show');});
- socket.on('allDead',()=>{spectating=false;gameOver=true;running=false;document.getElementById('finalStats').innerHTML=`Wave <b>${wave}</b> · <span style="color:#ff8fa3">The whole lobby was wiped out.</span>`;document.getElementById('gameover').style.display='grid'});
- socket.on('hostChanged',id=>{onlineHost=id===socket.id;renderLobby()});
-}
-document.getElementById('saveUsernameBtn').onclick=()=>{onlineUsername=(document.getElementById('usernameInput').value.trim()||'Player').slice(0,16);localStorage.setItem('zs_username',onlineUsername);sendProfile();setLobbyStatus('Username saved as '+onlineUsername)};
-document.getElementById('createLobbyBtn').onclick=()=>socket&&socket.emit('createRoom');
-document.getElementById('joinLobbyBtn').onclick=()=>{const c=document.getElementById('joinCodeInput').value.trim().toUpperCase();if(socket)socket.emit('joinRoom',c)};
-startLobbyBtn.onclick=()=>{if(socket&&onlineRoom&&onlineHost)socket.emit('startGame')};
-
 // Verity boss artwork (embedded so the game stays a single self-contained HTML file).
 const verityImg=new Image();
 verityImg.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALYAAACwCAYAAACiqZQZAAAN4klEQVR4AeydW7rktg2E21lF9r+67MKZ3zM8VksgAFK8SsiXMiWSAAqFUo/nJfnPJ/5Tq8DfvwJH4FeZ+G+pAmFsn2KSgX2R92/NrH2f/aQMYexv4SUTsfd9a/4bnCTMZ7YIgzD253M0yCJjqabxpF6qRSDwrcZ+gwHe0CMeFvEmYzcd9P9+ZRsBcWpfm66XX2x//mRyBex+6enGbjJQycCjBt+hdhNNRvVfW+epxk7DK9alg5GKOVgBDTlW62RxnH3+NGNXDepolNkDqa1/s4cq3Wq5joh7irGLB3PTCCNmU13jRm/FOlaT7By4u7GLBnFj4J3H0C99Zc9FuvZjX595K2Mf2nQLXznYQ6nnPFZo4dZ5NZV2M7Zb6DTE1QRfhU+hPm7dV+lvJ2Mjrqlb4cDMfE+/UKiXawYraLaDsRETqHoVDkjN9cbDAv2YBVhaptWNbQpYMJClB7EKuQI9zdnM7GlVYyMayGpTMIBsjjjIK+DUlxmBfKLvk2FvKxrbFArRhyn08kJOrc2ZjZZxJWMjDshqgMggeyEOuiiA5sBIzuyAcW3M8SrGNgVxCDtGsRdXcc7AnOUICVcwtioEYoIRYkQNWwFmAYyb6kyN2CbHs42tCuAQsIkIkaRcAcds1NmWVyyLmGnsbOOIBspaWez2C+gwI6C0mp2xEtPkaJaxsw0bQjVpOpK0VcCYWXbWbVl8ZxttbJoE3yz+vBkC/bkVy4oKGLNj5mAY9ZHGVhszhBkmSBSqV8AxQ9UD9ZWvkaOMrTbkEOTKPHaWVMAxS9ULrZoaYWy1EYcQrXqNPIMUcMxU9UQLmi2MrfHINkDzQAuOs30VYLZA6SDrDSXGfdTb2CIRo2ExJjb3VGDWrHsaW/wiZzW6py2ewVqZueiRFl33MrZIWGmwRS+RY2EFlNmLXrnbSg9jdyF6t9GIX1qB5p5pbewsQeWLXVrxd5Ab06Xhgax3ati1NHaWmNFQDe+I2VQBwwtZD5W229LYYm2jETEmNp+twAhPtDK2+KWNaODZFnhud4o3RC+VKtHC2CIRhXgpx7j/UAUUj4ieKpHhrrFvEyghG3dfpcAtb901tqi08iWK90duRq21FOjllTvGFr+oXkTXGkewaamA4hnRY57atcYWCyoEPVzizosVULwjes2SqtbYVt44DwWmKlBjbPELUr64qQ1G8X0UUDwkek7rrNTYYgGFkFY7zkKBiwKKl5L3LjHSRqmxpRyxFwosp0CJscUvRvnClms2CO2hgOIp0YNSVyXGluIfvfffv/ZobxeeI9X0Glv8UpQva2QPzWthFEBiVsDzaoAXgBcr4PkJULwlevHcs9fY57iPUvhyNzbGKfASc5uCeozt+kLMSptcWMoYm2g2gabpSY+xL7zf+Gu9muFX43MxSaONWq9Zxja/jEb8I00oUKqA6k3L2JditV/QJVFshAJOBWo8pxlb/SKcnOJaKNBTgaxHNWNfCNV8OZcksREKVChQ6r0iY1fw8YbEvYYKvOUvlppkOWNnf+K1ZHEWCkxQQPRqztgXfqV/FFwSxEYocFOBEg+6jX2T0xbh8Uf4FmNykZSMLf60u7I9/FIYf9kBXzwrGfvCvuSPgEtwbLxEgTFter3oMvYYylElFGinwNnYl5/0dqUiUyjQVYEv756Nfans/em/BMZGKNBJAY8nTWN34hZpQ4GuChyN/fVT3rVqJA8F+ijw4+GjsS+lPD/5l6AXbESL8xWwvKkaez79YBAK1CkQxq7TLaIWVyCMfRiQ9cebdX5IFY+TFUjG/vmX7sQnhpiUiHVVBTIe/cfLydircg9eoUCVAoaxq3JG0GQFMr9kk1mNLR/GHqt3VBukQBh7kNBRZqwCGPuff9k+lo0/yo5qxPPKCmS8+jfGXpl3cAsFqhQIY1fJNj8o80t1JfbSnTD2afA5w+T2T+HTX3fh2VuoMHZvhSP/FAXC2ILs51+987sQMmULXoDirIDnwOcTxs64AJMkZK4ssw3PZcgsQiSMvcgggkZbBZ5k7LbKRLatFQhjbz2+IJ9TIIydUyb2t1YgjL31+IJ8ToEwdk6Z2N9agTD21uN7Gvl2/YSx22kZmRZSIIy90DCCSjsFwtjttIxMCykQxl5oGEGlnQJh7HZaRqaFFAhjTxpGlO2rQBi7r76RfZICYexJwkfZvgqEsfvqG9knKRDGniR8lO2rAMb+61wi/v8Mz4rE+6oKZLz6F8buzDnShwLjFQhjj9c8Kg5QIIw9QOQoMV6BMPZ4zaPiAAWSseMvkAPEjhJtFcj9xZEqydg8B0IBWYENd7cwNl8m2FDfoDxJgWWNjZETkjbpnTXtxRoKSAqoxp5hIGoCiexxjzvguBfP8xRgFgkjWFBLq3M09uUvkFpgnL1bAYx1xFGN3P7xTqfnHw8fjd2plj8tgvhvx81ZCpTMqeRuy35MY88i1rLJglxxVVEALwDlinhUEyMm+rPpyXc29s9P+Z8cQ5f4n8MdKndRMY+ZihK2v/zl3bOx25frnHEDwTsr0D/9jhq7jD2yMX61Qcm4RvIr4bX7XXQFd/sonadWz8tHMvbXT7pWpOcZYpyh1aNhoN2JM78ClpZpNlZG7ll3GpxfPCsZu0GdPikQCWjZrYFosXH2+aAf0LQ4zoDnBGLSc1rZG4vf1dzGtpr9nW7MPxFNq7QSV43namce3TTttbMWvXr4pTo5Y19+2lPAKqslIiKAVfiuzsPSCr3Bgn2IXs0Ze0H+V0oIDa4n/+5YA/v35juf0Ado3Vsaa7GzzoqMbQkwqwlLeHiDWfxWrWtpgq5gBf4W1zNHzdjiT/w5wSrvngGUirNKb615oAPQ8nr01OIHnWU9qhlb5GYJIgYN2mQYQCu3Mn+Nt3RWs+fp39Kwpu6dGA/nc37L2Nkv4pxopXdrMAgFVuLcmwv9Aq0OugHtzkJnqjctY4t9WAKJQYM3GRDQyu7Qh8bfe+bp09LKW6v1PQ93qabH2OqXISVdac8aGMKBlTi34kJfQMuHPkC7s+CZ6UmPscW+LMHEoEmbnsHRD5hEsXlZTy8eXZoTK0jo6SGXzmts8Qu5UzhHqNc+QwRW/p16knqBP5DO0h46gPS+4qr0IHrx3IPX2Oe4we/tynkGiqigXdX+meALrEqe/q0cO5yXGFv8UjxiriYEwwUWL3oD1r2Z5/ADFgf6Bda9Fc6VfkQPSpxLjC3Fb73HoIHVhCK0Fdr13MvL02NXohOSlxpb/GK8Ak/oz1XSM3h6BK6EnS/BA1hl6AtY91Y6V/oSvZfjXmps8ogFFELELA8MACyi9Amsez3OqQus3PQBrHurnSu9iZ7T+NcYW8u3/RmGAFYjDAFY91qcUwdYueANrHtTzgcXrTW2+AV5xB/cX3U5r0HoOaG6mBCYcrIKx5ctL99L4CIbSp+i1yzatcYmr1hQIUjMVsAswEua3oH3vnSPeCCdSXvwA9LZLntKv6LHPH3dMXY2v0I0G7PyAcYBXo70n2DFpHtpte6nc/iA9L7rSt89uN81dvUX1aOZ3jkxEiipw+A0lOTiLvUBzw/HLW/dNTbaigQYJodPBMYCI3ujHhhZs3ctxSOip0r4tDA29UQiCnFitgdGA6dGmr2SO6FZ0kUSKd4QvVRKu5Wxs3WVBrIxux0k87He5U6OhLu5Vo0f4YmWxs5+aSMaWWWIyZRp9fBKd1k993e+Y3gh66HSnlsam9pZYkZDxD4SmNXCIxsXmjI8kPWOkMrcam1sCjYlSMLA4xVo7pkexmYKIlHjiyUu8FAFlNmLXrkrwz1j69VFwkqDerY43VYBZeaiR1o02tPYWX5Ko9mYONhTgVmz7m3s7BdJw2DPcQVrSwFmC5R7WW8oMe6j3saGiNqA0Tzxgc0UcMxU9USLdkcYG55qIw4hyBHYQAHHLFUvtGpxlLHhqzbkEIQcgcYKtEznmKHqgZZcRhob3jQGeL7AIcwlJjbWUMCYHTMHw8iONnZqLNukIVCKj3UhBYyZZWfds4VZxqanbMMIBbgUWFcBZgQUhtkZKzFNjmYamwbUxg3RiA9MUsAxG3W2vWnPNjb9qQIgIOBiYL4CzAIYTNSZGrFNjlcwNo2YQjjEJI+COLqrgHMG5izv8vDEr2JsuCII4FkEwgLxMDa7KYDmwCjA7IBxbczxSsZOHZviOEROuWK9qYBTa3NmN2kUh69obJpAKMCzCAQH4mFs3lYAbYGRiBkB49r441WNnZQwRUN8kAJivacAWgJHFnM2jhzdrqxubBpHQMBzFgwDZC/EgaoA2gH10u9DZgF+v438Z0GtHYyd2nGJyXBACopVVwCtgH7r59Q1g5/bEx92MjYyISzgWQXDAuqlFx+iDXBKgObAeX3+td2MnRRDZJDesyvDS8heeslB0oHV2TIaA+f1da7tauykIKKD9K6uDDRBvfigw9Qva0FbaAoKQta6uruxk5oMAaR3c2XQCeblzS6kvlgLqaMhKAxb7/pTjJ2UZSggvbtWDJDgCuh/qbhC4s9aHPz5oBn4POU/TzN2mgtDAundvWKMM9zBgy6e+fFeWRqNQGX4umFPNXZSnKElpL3iFeOcUZykMuBcl/fKVCks6cGa9h63Pt3Yx4ExyITjftUzBhuBKnLXoNQ36/X0gTtvMvZxfAw44bj/pOfUH+uT+nL18lZjH8Vh8AnH/R2fUx+sO/Jvxnm+sZu10iQRhpDQJHnDJBJH9hqW2DtVGNs3P0xzhi/y/q1zXd7vZ314hv8DAAD//6Js8YoAAAAGSURBVAMA3sofdHbjDekAAAAASUVORK5CYII=';
@@ -170,7 +92,6 @@ const lowHeadImg=new Image(); lowHeadImg.src='data:image/png;base64,iVBORw0KGgoA
 const gunHandImg=new Image(); gunHandImg.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGYAAABQCAYAAADr/ADSAAADpElEQVR4AeyZAXbjIAxEk73/nbv5jnEJFRgIYIHV14ltEGKkH5r29d9jzNfPaxtJr2H7ljoggaGBUmztWCofc6g297LrAENjfFGs/xzeM99abo/WeafNB5hnoXvXRHdNLScmNR/OEY/C8ds9A+bbommkL5ePMXdfev1mbeleKuMdmNJTkyqGpqJUTM4cOVBO7HIxDozmwm4JxwfT8tS0Bg0c1Dqv2nw+GLUmPWO3gROC0XxqHB/gIPe85PUNZs7SgIPmdH/iWgIzw6nxywIO8semv5fAzFoUcJxmreHwHQMz26k5CtpvHCDpuofovsTA6Hb9nTtgfZdhwOoUmNlPTax9U9SVAhMrbPZxTowvlfWkwGBepenGpqjTV+P0deliYDBal3H+VdTu65KKJDCYusSM0k3ph6Sudn0wXTdaMLkEKzZWXH4IhsTFSWzBaQeK+xqCOd3BAqo7UATHwFT3uWohcGL6SGhgPtpx6YMDtpkwMFsbVL0A6GFgVDE5zPwYmKMXum4MjC4ehxsDc7RC100I5vnQ5e+2bkIw228Et+2GosJDMIqs3drK08Ao5W9g9IHZ/vVtYPSB2RwZmK0Nal6204KbEMwxwaRpaAc+eh+CGepk8c1otFOqVDFGAkNgKpHNlXdA6iljSMwmgSEwuoBJ02kHpP4x5iuZJAaGRSThairrQJO+pcBgp8kmJKoU+yN/Oc+SpBh/bMQ9vprscwaGTZptRrJK4cGpJIVbI11L8pzFuvxncdnzOWCykzUOpNjGKT/SkT+lj+DIg1sfma4fzgWDgfpd5lxJzWfqVlkuGAxgkuso8S+IUKP2vnyfEjCXm30ZANTrsv73bGBGn9rL3gFawQBA0mWNGr1xGsxoN+/9APK+u/GrRjA3xvFbegmYER+8dlp2NiVg9iXdLq2gtMrTrdCcxJrA5PiNxYw4zbG9u4yvAqZLc65MamCu7H5ib01g+HGEEnbFKX/NEp8vVKkJDH6Q32ieUyqJTeVRN6cRTG6TQijLnBYakAOGuNEKmx7ufzYfxk/3rBUMjaT5MTHva6nTQmGaweAvR8tBoeiZwQAEUcdy0giGZudoORh+QRrB+P5ue29glKI3MAZGaQeU2io5MXwgKy1jPVv5YB4P/thbrwNKKyoBo7SENW0ZGKVctYGxz7H9jaINzG7LLgZG6XugBEzvHzO98ytFINsqASNnsNEuHSgFY+/qLhj+Ji0FQwbgOPHcQuRrkWeZHP8BAAD//ylGqX4AAAAGSURBVAMAZU2Ej+AwsTIAAAAASUVORK5CYII=';
 const handR=new Image(); handR.src='data:image/png;base64,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';
 const W=1100,H=700,keys={},mouse={x:W/2,y:H/2,down:false};
-['usernameInput','joinCodeInput'].forEach(id=>{const el=document.getElementById(id);if(el){['keydown','keyup','keypress'].forEach(ev=>el.addEventListener(ev,e=>e.stopPropagation()));}});
 let running=false,paused=false,gameOver=false,last=0,wave=1,kills=0,spawnTimer=0,waveCleared=false;
 let zombies=[],bullets=[],enemyBullets=[],particles=[],effects=[],texts=[],upgradeHistory=[];let gameTime=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rand=(a,b)=>a+Math.random()*(b-a),dist=(a,b,c,d)=>Math.hypot(a-c,b-d);
@@ -611,7 +532,7 @@ const bossRoster=[
 function bossPool(){ return bossRoster; }
 function spawnZombie(){
  const pool=typePool();const t=pool[Math.floor(Math.random()*pool.length)];
- const people=Math.max(1,onlinePlayerCount); const coScale=1+(people-1)*.38; zombies.push(makeZ(t,(1+Math.max(0,wave-1)*.085)*coScale));
+ zombies.push(makeZ(t,1+Math.max(0,wave-1)*.085));
 }
 function spawnWave(){
  zombies=[];bullets=[];enemyBullets=[];effects=[];
@@ -619,7 +540,7 @@ function spawnWave(){
  for(let i=0;i<count;i++)spawnZombie();
  if(wave%5===0){
    const boss=bossPool()[Math.floor(Math.random()*bossPool().length)];
-   const bossScale=(1+wave*.21)*(1+(Math.max(1,onlinePlayerCount)-1)*.42);
+   const bossScale=1+wave*.21;
    const b=makeZ(boss,bossScale,W/2,-80);
    b.ability=1.6;b.beamTimer=2.4;b.mineTimer=2.8;
    zombies.push(b);
@@ -637,16 +558,9 @@ function damagePlayer(amount,source=''){
  player.hp-=amount;player.damageFlash=.22;player.combo=0;player.comboTimer=0;
  if(player.hp<=0){
   if(player.extraLife>0){player.extraLife--;player.hp=Math.max(1,player.maxHp*.4);player.shield=player.shieldMax;say('PHOENIX!');return}
-  player.hp=0;
-  if(onlineRoom&&socket){
-    spectating=true;running=true;paused=false;
-    document.getElementById('spectateBanner').classList.add('show');
-    socket.emit('playerDead');
-  }else{
-    gameOver=true;running=false;paused=false;
-    document.getElementById('finalStats').innerHTML=`Wave <b>${wave}</b> · Kills <b>${kills}</b><br><span style="color:#aeb8c6">Your run ended. Pick different upgrades and try again.</span>`;
-    document.getElementById('gameover').style.display='grid';
-  }
+  player.hp=0;gameOver=true;running=false;paused=false;
+  document.getElementById('finalStats').innerHTML=`Wave <b>${wave}</b> · Kills <b>${kills}</b><br><span style="color:#aeb8c6">Your run ended. Pick different upgrades and try again.</span>`;
+  document.getElementById('gameover').style.display='grid';
  }
 }
 function shoot(){
@@ -982,7 +896,6 @@ function update(dt){
  player.flash=Math.max(0,player.flash-dt*8);
  if(!running||paused||gameOver)return;
  player.moveMult=1;
- if(spectating){ const live=Object.entries(onlinePlayers).find(([id,p])=>id!==socket?.id&&p.alive); if(live){player.x=live[1].x;player.y=live[1].y;} updateHud(); return; }
  if(player.frostTime>0){player.frostTime-=dt;if(player.frostTime<=0)player.moveMult=1}
  if(player.chronoSlowTime>0){player.chronoSlowTime-=dt;if(player.chronoSlowTime<=0)player.chronoSlow=1}
  if(player.webSlowTime>0)player.webSlowTime-=dt;
@@ -1382,27 +1295,6 @@ function draw(){
    }
  }
 
-
- // ONLINE PLAYERS: each remote player uses that player's own saved rig colors.
- if(onlineRoom){
-   for(const [id,rp] of Object.entries(onlinePlayers)){
-     if(id===socket?.id||!rp||!rp.alive)continue;
-     const rc=rp.customization||colorParts;
-     const rf=k=>{const c=rc[k]||{h:0,s:100,b:100};return `hue-rotate(${c.h||0}deg) saturate(${c.s||100}%) brightness(${c.b||100}%)`};
-     const part=(img,x,y,w,h,rot=0,flip=false,key=null)=>{if(!img?.complete||!img.naturalWidth)return;ctx.save();ctx.translate(x,y);ctx.rotate(rot);if(flip)ctx.scale(-1,1);ctx.filter=key?rf(key):'none';ctx.drawImage(img,-w/2,-h/2,w,h);ctx.restore()};
-     const a=Number(rp.angle)||0;
-     ctx.save();ctx.globalAlpha=.25;ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(rp.x,rp.y+38,30,9,0,0,Math.PI*2);ctx.fill();ctx.restore();
-     part(legL,rp.x-11,rp.y+32,25,43,0,false,'legL');part(legR,rp.x+11,rp.y+32,25,43,0,false,'legR');
-     part(torsoImg,rp.x,rp.y+5,43,48,0,false,'torso');part(handL,rp.x-27,rp.y+10,27,46,0,false,'handL');
-     part(gunHandImg,rp.x+Math.cos(a)*39,rp.y+Math.sin(a)*39,42,33,a,false,'gun');
-     part(handR,rp.x+Math.cos(a)*23,rp.y+Math.sin(a)*23,40,24,a,false,'handR');
-     const left=Math.cos(a)<0;part(rp.low?lowHeadImg:headImg,rp.x+Math.cos(a)*4,rp.y-29,34,33,Math.atan2(Math.sin(a),Math.abs(Math.cos(a)))*.72,left,'head');
-     ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.textAlign='center';ctx.fillText(rp.username||'Player',rp.x,rp.y-50);
-     ctx.fillStyle='#171a20';ctx.fillRect(rp.x-25,rp.y+45,50,5);ctx.fillStyle='#ff66cc';ctx.fillRect(rp.x-25,rp.y+45,50*Math.max(0,Math.min(1,(rp.hp||0)/(rp.maxHp||100))),5);ctx.textAlign='left';
-   }
- }
-
- if(spectating)ctx.globalAlpha=.15;
  // PLAYER: layered sprite rig. Only the HEAD and RIGHT ARM/GUN aim at the mouse.
  // Legs, torso, and left hand stay oriented with the movement direction.
  const moving=!!(keys.d||keys.a||keys.w||keys.s||keys.arrowleft||keys.arrowright||keys.arrowup||keys.arrowdown);
@@ -1472,7 +1364,6 @@ function draw(){
    ctx.beginPath();ctx.arc(player.x,player.y,player.r+9+Math.sin(gameTime*5),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
  }
 
- ctx.globalAlpha=1;
  // Damage vignette
  if(player.damageFlash>0){
    ctx.fillStyle='rgba(255,40,60,'+Math.min(.3,player.damageFlash*.25)+')';ctx.fillRect(0,0,W,H);
@@ -1502,18 +1393,6 @@ function chooseCards(){
  paused=true;waveCleared=false;const box=document.getElementById('cards');box.classList.add('show');
  const chosen=[];while(chosen.length<3){const c=makeCard();if(!chosen.some(x=>x.name===c.name))chosen.push(c)}
  chosen.forEach((u,i)=>{const el=document.getElementById('c'+(i+1));el.className='card '+u.rarity;el.innerHTML=`<div class="rarity">${u.rarity}</div><div class="icon">${u.icon}</div><h2>${u.name}</h2><p>${u.desc}</p><small>CHOOSE THIS UPGRADE</small>`;el.onclick=()=>{applyUpgrade(u);box.classList.remove('show');paused=false;wave++;spawnWave()}})
-}
-
-function showVote(cards,seconds=10){
- voteCards=cards||[];voteChoice=-1;voteSeconds=seconds;
- const ov=document.getElementById('voteOverlay');ov.classList.add('show');
- document.getElementById('voteTimer').textContent=voteSeconds;
- voteCards.forEach((u,i)=>{
-  const el=document.getElementById('vc'+(i+1));el.className='card voteCard '+u.rarity;
-  el.innerHTML=`<div class="rarity">${u.rarity}</div><div class="icon">${u.icon}</div><h2>${u.name}</h2><p>${u.desc}</p><div class="voteCount">0 votes</div>`;
-  el.onclick=()=>{if(voteChoice===i)return;voteChoice=i;document.querySelectorAll('.voteCard').forEach(x=>x.classList.remove('voted'));el.classList.add('voted');if(socket)socket.emit('vote',i)}
- });
- clearInterval(voteInterval);voteInterval=setInterval(()=>{voteSeconds--;document.getElementById('voteTimer').textContent=Math.max(0,voteSeconds);if(voteSeconds<=0)clearInterval(voteInterval)},1000);
 }
 
 const megaUpgradeEffects={'mega0':p=>{p.damage*=1+18/100},'mega1':p=>{p.reload*=Math.max(.45,1-12/100)},'mega2':p=>{p.speedMult*=1+15/100},'mega3':p=>{p.crit+= 7/100},'mega4':p=>{p.maxHp+=25;p.hp=clamp(p.hp+25,0,p.maxHp)},'mega5':p=>{p.bulletSpeed*=1+20/100},'mega6':p=>{p.bulletSize*=1+25/100},'mega7':p=>{p.pierce+=2},'mega8':p=>{p.shots+=1},'mega9':p=>{p.lifeSteal+= 5/100},'mega10':p=>{p.shieldMax+=30;p.shield=p.shieldMax},'mega11':p=>{p.enemySlow+= 10/100},'mega12':p=>{p.knockback+=18},'mega13':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega14':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+20/10},'mega15':p=>{p.dashChance+= 5/100},'mega16':p=>{p.regen+= 1},'mega17':p=>{p.boss=(p.boss||0)+55/100},'mega18':p=>{p.fastbuster=(p.fastbuster||0)+35/100},'mega19':p=>{p.tankbuster=(p.tankbuster||0)+35/100},'mega20':p=>{p.close=(p.close||0)+30/100},'mega21':p=>{p.far=(p.far||0)+25/100},'mega22':p=>{p.waveRunner=(p.waveRunner||0)+15/100},'mega23':p=>{p.comboPower=(p.comboPower||0)+12/100},'mega24':p=>{p.orbital=(p.orbital||0)+1},'mega25':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega26':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega27':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega28':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+20/100},'mega29':p=>{p.explosive=(p.explosive||0)+18/100},'mega30':p=>{p.damageTaken*=Math.max(.5,1-10/100)},'mega31':p=>{p.magnet+=(p.magnet||0)+35},'mega32':p=>{p.hp=clamp(p.hp+60,0,p.maxHp)},'mega33':p=>{p.critMult+=(p.critMult||2)*12/100},'mega34':p=>{p.fireRate+=(p.fireRate||0)+30/100},'mega35':p=>{p.extraLife++},'mega36':p=>{p.luck++},'mega37':p=>{p.thorns=(p.thorns||0)+1/10},'mega38':p=>{p.thorns=(p.thorns||0)+4/10},'mega39':p=>{p.healOnKill=(p.healOnKill||0)+5},'mega40':p=>{p.bulletLife*=1+18/100},'mega41':p=>{p.damage*=1+12/100},'mega42':p=>{p.reload*=Math.max(.45,1-15/100)},'mega43':p=>{p.speedMult*=1+7/100},'mega44':p=>{p.crit+= 25/100},'mega45':p=>{p.maxHp+=20;p.hp=clamp(p.hp+20,0,p.maxHp)},'mega46':p=>{p.bulletSpeed*=1+25/100},'mega47':p=>{p.bulletSize*=1+12/100},'mega48':p=>{p.pierce+=1},'mega49':p=>{p.shots+=1},'mega50':p=>{p.lifeSteal+= 30/100},'mega51':p=>{p.shieldMax+=10;p.shield=p.shieldMax},'mega52':p=>{p.enemySlow+= 18/100},'mega53':p=>{p.knockback+=20},'mega54':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega55':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+20/10},'mega56':p=>{p.dashChance+= 0/100},'mega57':p=>{p.regen+= 5},'mega58':p=>{p.boss=(p.boss||0)+35/100},'mega59':p=>{p.fastbuster=(p.fastbuster||0)+35/100},'mega60':p=>{p.tankbuster=(p.tankbuster||0)+30/100},'mega61':p=>{p.close=(p.close||0)+25/100},'mega62':p=>{p.far=(p.far||0)+15/100},'mega63':p=>{p.waveRunner=(p.waveRunner||0)+12/100},'mega64':p=>{p.comboPower=(p.comboPower||0)+15/100},'mega65':p=>{p.orbital=(p.orbital||0)+1},'mega66':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega67':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega68':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega69':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+18/100},'mega70':p=>{p.explosive=(p.explosive||0)+10/100},'mega71':p=>{p.damageTaken*=Math.max(.5,1-35/100)},'mega72':p=>{p.magnet+=(p.magnet||0)+60},'mega73':p=>{p.hp=clamp(p.hp+12,0,p.maxHp)},'mega74':p=>{p.critMult+=(p.critMult||2)*30/100},'mega75':p=>{p.fireRate+=(p.fireRate||0)+20/100},'mega76':p=>{p.extraLife++},'mega77':p=>{p.luck++},'mega78':p=>{p.thorns=(p.thorns||0)+4/10},'mega79':p=>{p.thorns=(p.thorns||0)+20/10},'mega80':p=>{p.healOnKill=(p.healOnKill||0)+4},'mega81':p=>{p.bulletLife*=1+12/100},'mega82':p=>{p.damage*=1+15/100},'mega83':p=>{p.reload*=Math.max(.45,1-7/100)},'mega84':p=>{p.speedMult*=1+25/100},'mega85':p=>{p.crit+= 20/100},'mega86':p=>{p.maxHp+=25;p.hp=clamp(p.hp+25,0,p.maxHp)},'mega87':p=>{p.bulletSpeed*=1+12/100},'mega88':p=>{p.bulletSize*=1+10/100},'mega89':p=>{p.pierce+=1},'mega90':p=>{p.shots+=2},'mega91':p=>{p.lifeSteal+= 10/100},'mega92':p=>{p.shieldMax+=18;p.shield=p.shieldMax},'mega93':p=>{p.enemySlow+= 20/100},'mega94':p=>{p.knockback+=20},'mega95':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega96':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+2/10},'mega97':p=>{p.dashChance+= 13/100},'mega98':p=>{p.regen+= 3},'mega99':p=>{p.boss=(p.boss||0)+35/100},'mega100':p=>{p.fastbuster=(p.fastbuster||0)+30/100},'mega101':p=>{p.tankbuster=(p.tankbuster||0)+25/100},'mega102':p=>{p.close=(p.close||0)+15/100},'mega103':p=>{p.far=(p.far||0)+12/100},'mega104':p=>{p.waveRunner=(p.waveRunner||0)+15/100},'mega105':p=>{p.comboPower=(p.comboPower||0)+22/100},'mega106':p=>{p.orbital=(p.orbital||0)+1},'mega107':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega108':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega109':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega110':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+10/100},'mega111':p=>{p.explosive=(p.explosive||0)+35/100},'mega112':p=>{p.damageTaken*=Math.max(.5,1-60/100)},'mega113':p=>{p.magnet+=(p.magnet||0)+12},'mega114':p=>{p.hp=clamp(p.hp+30,0,p.maxHp)},'mega115':p=>{p.critMult+=(p.critMult||2)*20/100},'mega116':p=>{p.fireRate+=(p.fireRate||0)+1/100},'mega117':p=>{p.extraLife++},'mega118':p=>{p.luck++},'mega119':p=>{p.thorns=(p.thorns||0)+20/10}};
@@ -1599,12 +1478,6 @@ function fillCodex(){
  const list=document.getElementById('zlist');list.innerHTML='';
  zombieTypes.forEach(t=>{const [name,desc,kind,hp,speed,r,col]=t;const d=document.createElement('div');d.className='zitem';d.innerHTML=`<div class="zname">${name}</div><div class="zdesc">${desc}</div><div class="pill">HP ${hp} · SPEED ${speed}</div>`;list.appendChild(d)})
 }
-
-setInterval(()=>{
- if(!socket||!onlineRoom||!player)return;
- socket.emit('playerState',{x:player.x,y:player.y,angle:player.angle,hp:player.hp,maxHp:player.maxHp,alive:player.hp>0,spectating,customization:colorParts});
-},50);
-
 function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(k==='escape'&&running){paused=!paused;document.getElementById('codex').style.display=paused?'grid':'none'}if(k===' '||k.startsWith('arrow'))e.preventDefault()});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
@@ -1626,12 +1499,106 @@ document.querySelectorAll('.card').forEach(card=>{
 document.getElementById('customizeBtn').onclick=()=>document.getElementById('customize').classList.remove('modalHidden');
 document.getElementById('closeCustomize').onclick=()=>document.getElementById('customize').classList.add('modalHidden');
 document.getElementById('resetColors').onclick=resetColors;
-document.getElementById('startBtn').onclick=()=>{if(socket){onlineLobby.classList.remove('hidden');renderLobby();return;} document.getElementById('start').classList.add('hidden');running=true;wave=1;waveCleared=false;spawnWave()};
-document.getElementById('codexBtn').onclick=()=>document.getElementById('codex').style.display='grid';
-document.getElementById('closeCodex').onclick=()=>document.getElementById('codex').style.display='none';
+document.getElementById('startBtn').onclick=()=>{document.getElementById('start').classList.add('hidden');running=true;wave=1;waveCleared=false;discoveredZombies.clear();zombieNoticeQueue.length=0;zombieNoticeBusy=false;document.getElementById('newZombie').classList.remove('show');spawnWave()};
+
+
 document.getElementById('restart').onclick=()=>location.reload();
 document.getElementById('goMenu').onclick=()=>location.reload();
-if(socket){document.getElementById('start').classList.add('hidden');onlineLobby.classList.remove('hidden');} fillCodex();updateHud();requestAnimationFrame(loop);
+fillCodex();updateHud();requestAnimationFrame(loop);
+
+/* ONLINE CO-OP: server owns room, zombie AI, round state and voting. */
+const onlineSocket=typeof io==='function'?io():null;
+let onlineId='',onlineRoom='',onlineHost=false,onlineReady=false,onlineSpectating=false;
+let onlineRemote={},onlineZombies=[],currentVoteId=null,rerolls=3;
+const om=id=>document.getElementById(id), omsg=t=>om('lobbyMsg').textContent=t;
+function esc2(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function lobbyRender(ps){
+ om('playersList').innerHTML=Object.values(ps||{}).map(p=>`<div class="pl"><span>${esc2(p.username)}</span><span class="${p.ready?'ready':'waiting'}">${p.ready?'READY':'WAITING'}</span></div>`).join('')||'No players yet.';
+ const a=om('lobbyActions');a.innerHTML='';
+ if(onlineRoom){let b=document.createElement('button');b.textContent=onlineReady?'UNREADY':'READY UP';b.onclick=()=>onlineSocket.emit('readyToggle');a.appendChild(b);
+ if(onlineHost){let s=document.createElement('button');s.className='alt';s.textContent='START RUN';s.onclick=()=>onlineSocket.emit('hostStart');a.appendChild(s)}
+ let c=document.createElement('div');c.className='onlineCode';c.textContent=onlineRoom;a.appendChild(c)}
+}
+function showLobby(v){om('onlineLobby').classList.toggle('hidden',!v)}
+om('nameBtn').onclick=()=>{let n=om('usernameInput').value.trim().slice(0,16)||'Player';localStorage.zsName=n;if(onlineSocket)onlineSocket.emit('setUsername',n);om('usernameInput').value=n;omsg('Name saved.')};
+om('usernameInput').value=localStorage.zsName||'';
+om('createBtn').onclick=()=>onlineSocket&&onlineSocket.emit('createRoom');
+om('joinBtn').onclick=()=>onlineSocket&&onlineSocket.emit('joinRoom',om('roomInput').value.trim().toUpperCase());
+if(onlineSocket){
+ onlineSocket.on('connect',()=>{onlineId=onlineSocket.id;onlineSocket.emit('setUsername',localStorage.zsName||'Player');omsg('🟢 Connected. Create or join a lobby.')});
+ onlineSocket.on('connect_error',()=>omsg('🔴 Multiplayer connection failed.'));
+ onlineSocket.on('roomCreated',c=>{onlineRoom=c;onlineHost=true;omsg('Lobby created — share the code.')});
+ onlineSocket.on('joinedRoom',c=>{onlineRoom=c;onlineHost=false;omsg('Joined lobby.')});
+ onlineSocket.on('roomError',m=>omsg('⚠️ '+m));
+ onlineSocket.on('lobbyState',d=>{onlineRoom=d.code;onlineHost=d.hostId===onlineId;onlineReady=!!d.players[onlineId]?.ready;lobbyRender(d.players)});
+ onlineSocket.on('countdown',n=>{om('countdownOnline').textContent=n>0?n:'GO!';if(n<=0)setTimeout(()=>om('countdownOnline').textContent='',700)});
+ onlineSocket.on('roundStart',d=>{showLobby(false);om('start').classList.add('hidden');running=true;paused=false;wave=d.wave||1;onlineSpectating=false;om('spectatorOverlay').classList.remove('specOn');});
+ onlineSocket.on('remotePlayers',p=>onlineRemote=p||{});
+ onlineSocket.on('authoritativeZombies',z=>onlineZombies=z||[]);
+ onlineSocket.on('playerDown',id=>{if(id===onlineId){onlineSpectating=true;running=false;paused=true;om('spectatorOverlay').classList.add('specOn')}});
+ onlineSocket.on('roundCleared',d=>{onlineSpectating=false;running=true;paused=true;om('spectatorOverlay').classList.remove('specOn');player.hp=player.maxHp;currentVoteId=d.voteId;rerolls=3;showTeamVote(d.cards,d.votes,d.endsAt)});
+ onlineSocket.on('cardVoteState',d=>{currentVoteId=d.voteId;showTeamVote(d.cards,d.votes,d.endsAt);});
+ onlineSocket.on('cardVoteResult',d=>{applyUpgrade(d.card);om('cards').classList.remove('show');om('rerollBtn').classList.remove('show');paused=false;running=true});
+ onlineSocket.on('rerollState',d=>{rerolls=d.left;om('rerollBtn').textContent=`🔄 VOTE TO REROLL (${rerolls} LEFT)`;om('rerollBtn').classList.toggle('show',rerolls>0)});
+ onlineSocket.on('gameOver',()=>{running=false;paused=true;om('gameover').style.display='grid';om('finalStats').textContent='Everyone in the lobby was defeated.'});
+}
+function showTeamVote(cards,votes,endsAt){
+ paused=true;running=false;om('cards').classList.add('show');
+ const els=[om('c1'),om('c2'),om('c3')];let picked=false;
+ cards.forEach((u,i)=>{let e=els[i];e.className='card '+u.rarity;e.innerHTML=`<div class="rarity">${u.rarity}</div><div class="icon">${u.icon}</div><h2>${u.name}</h2><p>${u.desc}</p><small>TEAM VOTES: ${(votes||{})[i]||0}</small>`;e.onclick=()=>{if(picked)return;picked=true;onlineSocket.emit('cardVote',{voteId:currentVoteId,index:i})}});
+ om('rerollBtn').textContent=`🔄 VOTE TO REROLL (${rerolls} LEFT)`;om('rerollBtn').classList.toggle('show',rerolls>0);
+}
+om('rerollBtn').onclick=()=>{if(rerolls>0)onlineSocket.emit('rerollVote',{voteId:currentVoteId})};
+
+// Send movement/customization input; the server moves the real player and controls zombie AI.
+setInterval(()=>{if(!onlineSocket||!onlineRoom||!onlineReady||onlineSpectating)return;
+ const dx=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0),dy=(keys.s||keys.ArrowDown?1:0)-(keys.w||keys.ArrowUp?1:0);
+ onlineSocket.emit('input',{dx,dy,aim:player.angle,shoot:!!keys[' ']||mouse.down,custom:window.customization||{},lowHp:player.hp<player.maxHp/2});
+},50);
+// Prevent Escape from interacting with the card vote.
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&om('cards').classList.contains('show')){e.preventDefault();e.stopImmediatePropagation()}},true);
+
+// Server zombie positions are rendered instead of creating an independent online zombie set.
+const oldDrawOnline=draw;
+draw=function(){oldDrawOnline();if(onlineRoom){for(const z of onlineZombies){ctx.save();ctx.fillStyle='#55b84a';ctx.beginPath();ctx.arc(z.x,z.y,16,0,Math.PI*2);ctx.fill();ctx.restore()}for(const p of Object.values(onlineRemote)){if(p.id===onlineId||!p.alive)continue;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle||0);ctx.fillStyle='#ff66cc';ctx.fillRect(-14,-12,28,24);ctx.fillStyle='#ddd';ctx.fillRect(7,-3,22,6);ctx.restore();ctx.fillStyle='#fff';ctx.font='11px Arial';ctx.textAlign='center';ctx.fillText(p.username,p.x,p.y-28);ctx.textAlign='left'}}};
+</script>
+
+<script>
+/* ONLINE BRIDGE */
+const net=typeof io==='function'?io():null;
+let netRoom='',netId='',netSpectating=false,netVote=null,netRerolls=3,netZombies=[];
+const netPanel=document.getElementById('onlinePanel'), netMsg=document.getElementById('onlineMsg');
+const say=t=>{if(netMsg)netMsg.textContent=t};
+function lobbyDraw(ps){
+ const list=document.getElementById('roomList'); if(!list)return;
+ list.innerHTML=Object.values(ps||{}).map(p=>`<div class="roomPlayer"><span>${p.username||'Player'}</span><span class="${p.ready?'ready':'notready'}">${p.ready?'READY':'NOT READY'}</span></div>`).join('')||'No players yet.';
+ const a=document.getElementById('lobbyActions');a.innerHTML='';
+ if(netRoom){let b=document.createElement('button');b.textContent='READY UP';b.onclick=()=>net.emit('readyToggle');a.appendChild(b);if(net._host){let x=document.createElement('button');x.textContent='START WHEN READY';x.onclick=()=>net.emit('hostStart');a.appendChild(x)}}
+}
+if(net){
+ net.on('connect',()=>{netId=net.id;say('🟢 Connected. Set your username.');net.emit('setUsername',localStorage.getItem('zsName')||'Player')});
+ net.on('roomCreated',c=>{netRoom=c;net._host=true;say('Lobby created. Share code: '+c)});
+ net.on('joinedRoom',c=>{netRoom=c;net._host=false;say('Joined lobby: '+c)});
+ net.on('roomError',say);
+ net.on('lobbyState',d=>{netRoom=d.code||netRoom;net._host=d.hostId===netId;lobbyDraw(d.players)});
+ net.on('countdown',n=>{const e=document.getElementById('countdown');if(e)e.textContent=n>0?n:'GO!'});
+ net.on('roundStart',d=>{netPanel.classList.add('hidden');netSpectating=false;document.getElementById('spectator')?.classList.remove('show');running=true;paused=false;wave=d.wave||wave});
+ net.on('remotePlayers',ps=>window.netPlayers=ps||{});
+ net.on('authoritativeZombies',zs=>window.netZombies=zs||[]);
+ net.on('playerDown',id=>{if(id===netId){netSpectating=true;running=false;paused=true;document.getElementById('spectator')?.classList.add('show')}});
+ net.on('roundCleared',d=>{netSpectating=false;running=false;paused=true;document.getElementById('spectator')?.classList.remove('show');document.getElementById('cards')?.classList.add('show');showNetCards(d.cards,d.voteId);});
+ net.on('cardVoteState',d=>{netVote=d;showNetCards(d.cards,d.id||d.voteId)});
+ net.on('cardVoteResult',d=>{if(typeof applyUpgrade==='function')applyUpgrade(d.card);document.getElementById('cards')?.classList.remove('show');netVote=null});
+ net.on('rerollState',d=>{netRerolls=d.left;const b=document.getElementById('rerollVote');if(b){b.textContent='🔄 VOTE TO REROLL ('+netRerolls+' LEFT)';b.classList.toggle('show',netRerolls>0)}});
+ net.on('gameOver',()=>{running=false;paused=true;document.getElementById('gameover').style.display='grid'});
+}
+document.getElementById('saveNameBtn')?.addEventListener('click',()=>{let n=(document.getElementById('usernameInput').value||'Player').trim().slice(0,16)||'Player';localStorage.setItem('zsName',n);net?.emit('setUsername',n);say('Username: '+n)});
+if(document.getElementById('usernameInput'))document.getElementById('usernameInput').value=localStorage.getItem('zsName')||'';
+document.getElementById('createRoomBtn')?.addEventListener('click',()=>net?.emit('createRoom'));
+document.getElementById('joinRoomBtn')?.addEventListener('click',()=>net?.emit('joinRoom',(document.getElementById('roomInput').value||'').trim().toUpperCase()));
+function showNetCards(cs,id){netVote=netVote||{};netVote.id=id;const el=[c1,c2,c3];cs.forEach((c,i)=>{el[i].innerHTML=`<div class="rarity">${c.rarity}</div><div class="icon">${c.icon}</div><h2>${c.name}</h2><p>${c.desc}</p><small>VOTES: ${(netVote.votes||{})[i]||0}</small>`;el[i].onclick=()=>net?.emit('cardVote',{voteId:id,index:i})});const end=Date.now()+10000;setTimeout(()=>{},10000)}
+document.getElementById('rerollVote')?.addEventListener('click',()=>net?.emit('rerollVote',{voteId:netVote?.id}));
+setInterval(()=>{if(net&&netRoom&&!netSpectating&&typeof player!=='undefined')net.emit('input',{dx:((keys.d||keys.ArrowRight)?1:0)-((keys.a||keys.ArrowLeft)?1:0),dy:((keys.s||keys.ArrowDown)?1:0)-((keys.w||keys.ArrowUp)?1:0),aim:player.angle||0,shoot:!!mouse.down,custom:window.customization||{}})},50);
 </script>
 </body>
 </html>
