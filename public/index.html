@@ -38,7 +38,7 @@ h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10
 @media(max-width:800px){#cards{grid-template-columns:1fr;padding:20px;overflow:auto}.card{min-height:220px}#zlist{grid-template-columns:1fr 1fr}.panel{min-width:0}h1{font-size:36px}}
 </style>
 <style>
-#onlineLobby{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.88);z-index:1000;backdrop-filter:blur(7px);pointer-events:auto} .lobbyBox{pointer-events:auto}
+#onlineLobby{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.88);z-index:100;backdrop-filter:blur(7px);pointer-events:auto} .lobbyBox{pointer-events:auto}
 #onlineLobby.hidden{display:none}.lobbyBox{width:min(760px,92vw);background:#101722;border:1px solid #3a465a;border-radius:20px;padding:28px;box-shadow:0 25px 80px #000}
 .lobbyRow{display:flex;gap:8px;margin-top:12px}.lobbyRow input{flex:1;background:#080d14;color:#fff;border:1px solid #354257;border-radius:9px;padding:12px}.playersList{margin-top:16px;border:1px solid #303b4d;border-radius:12px;padding:12px;background:#0a0f17}.pl{display:flex;justify-content:space-between;padding:7px;border-bottom:1px solid #202938}.pl:last-child{border:0}.ready{color:#5ee67b;font-weight:900}.waiting{color:#ffd34f;font-weight:900}#lobbyMsg{margin-top:10px;color:#aeb8c6}#countdownOnline{font-size:72px;text-align:center;font-weight:900;color:#ffd34f;margin-top:8px}.onlineCode{font-size:24px;font-weight:900;letter-spacing:4px;color:#8eeaff}
 #spectatorOverlay{display:none;position:absolute;inset:0;z-index:90;place-items:center;background:rgba(0,0,0,.18);pointer-events:none}.specOn{display:grid!important}.specCard{background:#090d14e8;border:1px solid #40506a;border-radius:16px;padding:20px;text-align:center}.specCard h2{margin:0}.specCard p{color:#b7c1cf}
@@ -65,10 +65,10 @@ h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10
 <div id="newZombie"><canvas id="zPreview" width="82" height="82"></canvas><div><div class="nzTitle">NEW ENEMY DISCOVERED</div><div class="nzName" id="nzName"></div><div class="nzDesc" id="nzDesc"></div><div class="nzStats" id="nzStats"></div></div></div>
 <div id="hint">WASD / Arrow Keys move · Mouse aim · Hold SPACE or click to fire</div>
 
-<div id="start"><div class="box">
+<div id="start" class="hidden"><div class="box">
 <h1>☣ ZOMBIE SURVIVOR</h1><div class="sub">CHAOS EDITION — every run is different.</div>
 <p>Survive escalating waves, choose <b>1 of 3 random upgrades</b> after every wave, and learn enemy types in the Zombie Codex, including multiple deadly bosses and the Verity boss.</p>
-<div class="buttons"><button class="alt" id="customizeBtn">🎨 CUSTOMIZE</button></div>
+<div class="buttons"><button id="startBtn">START RUN</button><button class="alt" id="customizeBtn">🎨 CUSTOMIZE</button></div>
 </div></div>
 
 <div id="cards"><div class="card" id="c1"></div><div class="card" id="c2"></div><div class="card" id="c3"></div></div>
@@ -1474,10 +1474,6 @@ function resetColors(){for(const c of Object.values(colorParts)){c.h=0;c.s=100;c
 buildCustomizer();
 drawCustomizationPreview();
 
-function fillCodex(){
- const list=document.getElementById('zlist');list.innerHTML='';
- zombieTypes.forEach(t=>{const [name,desc,kind,hp,speed,r,col]=t;const d=document.createElement('div');d.className='zitem';d.innerHTML=`<div class="zname">${name}</div><div class="zdesc">${desc}</div><div class="pill">HP ${hp} · SPEED ${speed}</div>`;list.appendChild(d)})
-}
 function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(k==='escape'&&running && !document.getElementById('cards')?.classList.contains('show')){paused=!paused}if(k===' '||k.startsWith('arrow'))e.preventDefault()});
 addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
