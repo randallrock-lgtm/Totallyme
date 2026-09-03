@@ -36,23 +36,39 @@ h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10
 #gameover{display:none}.over{text-align:center}.over h2{font-size:58px;margin:0 0 10px;color:#ff6470}#customize{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.82);backdrop-filter:blur(5px);z-index:40}.modalHidden{display:none!important}.customizeBox{width:min(820px,94vw)}#customParts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.previewWrap{margin-top:16px;border:1px solid #303b4d;border-radius:16px;background:radial-gradient(circle at 50% 35%,#202d42,#080c12 72%);padding:12px;text-align:center}.previewTitle{font-size:12px;font-weight:900;letter-spacing:2px;color:#8eeaff;margin-bottom:4px}.previewWrap canvas{width:360px;max-width:100%;height:auto;border:1px solid #334057;border-radius:12px;background:transparent;display:block;margin:auto}.previewHint{font-size:11px;color:#8793a5;margin-top:5px}.partControl{padding:12px;border:1px solid #303b4d;border-radius:12px;background:#0c121b}.partHead{display:flex;justify-content:space-between;align-items:center;font-weight:900;margin-bottom:8px}.swatch{width:18px;height:18px;border-radius:50%;border:1px solid #fff5;display:inline-block}.rangeRow{display:grid;grid-template-columns:80px 1fr 42px;gap:8px;align-items:center;margin:5px 0;font-size:11px;color:#aeb8c6}.rangeRow input{width:100%}@media(max-width:800px){#customParts{grid-template-columns:1fr}}
 
 @media(max-width:800px){#cards{grid-template-columns:1fr;padding:20px;overflow:auto}.card{min-height:220px}#zlist{grid-template-columns:1fr 1fr}.panel{min-width:0}h1{font-size:36px}}
+
+#onlineLobby{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.84);backdrop-filter:blur(6px);z-index:1000}
+#onlineLobby.hidden{display:none!important}.onlineBox{width:min(760px,92vw);background:linear-gradient(145deg,#141b26,#0c1119);border:1px solid #354257;border-radius:20px;padding:28px;box-shadow:0 25px 80px #000}
+.onlineGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.onlineGrid input{box-sizing:border-box;width:100%;padding:12px;border-radius:9px;border:1px solid #354257;background:#080d14;color:#fff;font:inherit}
+.onlineList{margin-top:14px;border:1px solid #303b4d;border-radius:12px;padding:12px;background:#0a0f17}.onlinePlayer{display:flex;justify-content:space-between;padding:7px 2px;border-bottom:1px solid #202938}.onlinePlayer:last-child{border-bottom:0}
+.onlineReady{color:#5ee67b;font-weight:900}.onlineWait{color:#ffcb5c}.onlineCode{font-size:22px;font-weight:900;letter-spacing:4px;color:#8eeaff;margin-top:12px;text-align:center}.onlineMsg{margin-top:10px;color:#aeb8c6}.countdown{font-size:64px;font-weight:900;text-align:center;color:#ffd34f}
+#teamReroll{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:none;z-index:1100}
+#teamReroll.show{display:block}
 </style>
-<style>
-#onlineLobby{position:absolute;inset:0;display:grid;place-items:center;background:rgba(3,6,10,.88);z-index:100;backdrop-filter:blur(7px);pointer-events:auto} .lobbyBox{pointer-events:auto}
-#onlineLobby.hidden{display:none}.lobbyBox{width:min(760px,92vw);background:#101722;border:1px solid #3a465a;border-radius:20px;padding:28px;box-shadow:0 25px 80px #000}
-.lobbyRow{display:flex;gap:8px;margin-top:12px}.lobbyRow input{flex:1;background:#080d14;color:#fff;border:1px solid #354257;border-radius:9px;padding:12px}.playersList{margin-top:16px;border:1px solid #303b4d;border-radius:12px;padding:12px;background:#0a0f17}.pl{display:flex;justify-content:space-between;padding:7px;border-bottom:1px solid #202938}.pl:last-child{border:0}.ready{color:#5ee67b;font-weight:900}.waiting{color:#ffd34f;font-weight:900}#lobbyMsg{margin-top:10px;color:#aeb8c6}#countdownOnline{font-size:72px;text-align:center;font-weight:900;color:#ffd34f;margin-top:8px}.onlineCode{font-size:24px;font-weight:900;letter-spacing:4px;color:#8eeaff}
-#spectatorOverlay{display:none;position:absolute;inset:0;z-index:90;place-items:center;background:rgba(0,0,0,.18);pointer-events:none}.specOn{display:grid!important}.specCard{background:#090d14e8;border:1px solid #40506a;border-radius:16px;padding:20px;text-align:center}.specCard h2{margin:0}.specCard p{color:#b7c1cf}
-#rerollBtn{display:none;position:absolute;z-index:110;bottom:22px;left:50%;transform:translateX(-50%);background:#263247;color:#fff}
-#rerollBtn.show{display:block}
-</style><script src="/socket.io/socket.io.js"></script></head>
+</head>
 <body>
-<div id="wrap"><div id="onlineLobby">
-<div class="lobbyBox"><h1>🌐 ONLINE LOBBY</h1><div class="sub">Everyone must press READY. Then the host starts the 5-second countdown.</div>
-<div class="lobbyRow"><input id="usernameInput" maxlength="16" placeholder="Username"><button id="nameBtn">SET NAME</button></div>
-<div class="lobbyRow"><button id="createBtn">CREATE LOBBY</button><input id="roomInput" maxlength="8" placeholder="ROOM CODE"><button id="joinBtn">JOIN</button></div>
-<div id="playersList" class="playersList">Create or join a lobby.</div><div id="lobbyActions" class="buttons"></div><div id="lobbyMsg"></div><div id="countdownOnline"></div></div></div>
-<div id="spectatorOverlay"><div><h2>👻 SPECTATING</h2><p>You are down for this round. You will revive when your team clears it.</p></div></div>
-<button id="rerollBtn">🔄 VOTE TO REROLL (3 LEFT)</button>
+<div id="wrap">
+<div id="onlineLobby">
+ <div class="onlineBox">
+  <h2>🌐 ONLINE CO-OP</h2>
+  <div class="sub">This is your real Zombie Survivor game. Create a lobby, customize your character, then ready up.</div>
+  <div class="onlineGrid">
+   <input id="onlineName" maxlength="16" placeholder="Username">
+   <button id="onlineNameBtn">SET USERNAME</button>
+  </div>
+  <div class="onlineGrid">
+   <button id="onlineCreate">CREATE LOBBY</button>
+   <input id="onlineCodeInput" maxlength="8" placeholder="ROOM CODE">
+   <button id="onlineJoin">JOIN LOBBY</button>
+  </div>
+  <div id="onlineList" class="onlineList">Create or join a lobby.</div>
+  <div class="buttons" id="onlineActions"></div>
+  <div id="onlineCode" class="onlineCode"></div>
+  <div id="onlineCountdown" class="countdown"></div>
+  <div id="onlineMsg" class="onlineMsg"></div>
+ </div>
+</div>
+<button id="teamReroll">🔄 VOTE TO REROLL (3 LEFT)</button>
 
 <canvas id="game" width="1100" height="700"></canvas>
 
@@ -63,17 +79,18 @@ h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10
 </div>
 <div id="message"></div>
 <div id="newZombie"><canvas id="zPreview" width="82" height="82"></canvas><div><div class="nzTitle">NEW ENEMY DISCOVERED</div><div class="nzName" id="nzName"></div><div class="nzDesc" id="nzDesc"></div><div class="nzStats" id="nzStats"></div></div></div>
-<div id="hint">WASD / Arrow Keys move · Mouse aim · Hold SPACE or click to fire</div>
+<div id="hint">WASD / Arrow Keys move · Mouse aim · Hold SPACE or click to fire · ESC opens Codex</div>
 
-<div id="start" class="hidden"><div class="box">
-<h1>☣ ZOMBIE SURVIVOR</h1><div class="sub">CHAOS EDITION — every run is different.</div>
-<p>Survive escalating waves, choose <b>1 of 3 random upgrades</b> after every wave, and learn enemy types in the Zombie Codex, including multiple deadly bosses and the Verity boss.</p>
-<div class="buttons"><button id="startBtn">START RUN</button><button class="alt" id="customizeBtn">🎨 CUSTOMIZE</button></div>
+<div id="start"><div class="box">
+<h1>☣ ZOMBIE SURVIVOR</h1><div class="sub">CHAOS EDITION — ONLINE CO-OP</div>
+<p>Create or join a lobby above, then customize your character using the real in-game sprites before the run starts.</p>
+<div class="buttons"><button class="alt" id="customizeBtn">🎨 CUSTOMIZE</button></div>
 </div></div>
 
 <div id="cards"><div class="card" id="c1"></div><div class="card" id="c2"></div><div class="card" id="c3"></div></div>
 
-<div id="customize" class="modalHidden"><div class="box customizeBox"><h2>🎨 Character Customization</h2><div class="sub">See the actual player sprites together while you customize every part.</div><div class="previewWrap"><div class="previewTitle">LIVE CHARACTER PREVIEW</div><canvas id="customPreview" width="360" height="300"></canvas><div class="previewHint">Your real in-game sprites are used here.</div></div><div id="customParts"></div><div class="buttons"><button id="resetColors" class="alt">RESET COLORS</button><button id="closeCustomize">DONE</button></div></div></div></div>
+<div id="customize" class="modalHidden"><div class="box customizeBox"><h2>🎨 Character Customization</h2><div class="sub">See the actual player sprites together while you customize every part.</div><div class="previewWrap"><div class="previewTitle">LIVE CHARACTER PREVIEW</div><canvas id="customPreview" width="360" height="300"></canvas><div class="previewHint">Your real in-game sprites are used here.</div></div><div id="customParts"></div><div class="buttons"><button id="resetColors" class="alt">RESET COLORS</button><button id="closeCustomize">DONE</button></div></div></div>
+</div>
 
 <div id="gameover"><div class="box over"><h2>YOU DIED</h2><div id="finalStats"></div><div class="buttons" style="justify-content:center"><button id="restart">RUN IT BACK</button><button class="alt" id="goMenu">MENU</button></div></div></div>
 </div>
@@ -1496,68 +1513,88 @@ document.getElementById('customizeBtn').onclick=()=>document.getElementById('cus
 document.getElementById('closeCustomize').onclick=()=>document.getElementById('customize').classList.add('modalHidden');
 document.getElementById('resetColors').onclick=resetColors;
 document.getElementById('startBtn').onclick=()=>{document.getElementById('start').classList.add('hidden');running=true;wave=1;waveCleared=false;discoveredZombies.clear();zombieNoticeQueue.length=0;zombieNoticeBusy=false;document.getElementById('newZombie').classList.remove('show');spawnWave()};
-
-
+document.getElementById('codexBtn').onclick=()=>document.getElementById('codex').style.display='grid';
+document.getElementById('closeCodex').onclick=()=>document.getElementById('codex').style.display='none';
 document.getElementById('restart').onclick=()=>location.reload();
 document.getElementById('goMenu').onclick=()=>location.reload();
 updateHud();requestAnimationFrame(loop);
-
-/* ONLINE CO-OP: server owns room, zombie AI, round state and voting. */
-const onlineSocket=typeof io==='function'?io():null;
-let onlineId='',onlineRoom='',onlineHost=false,onlineReady=false,onlineSpectating=false;
-let onlineRemote={},onlineZombies=[],currentVoteId=null,rerolls=3;
-const om=id=>document.getElementById(id), omsg=t=>om('lobbyMsg').textContent=t;
-function esc2(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function lobbyRender(ps){
- om('playersList').innerHTML=Object.values(ps||{}).map(p=>`<div class="pl"><span>${esc2(p.username)}</span><span class="${p.ready?'ready':'waiting'}">${p.ready?'READY':'WAITING'}</span></div>`).join('')||'No players yet.';
- const a=om('lobbyActions');a.innerHTML='';
- if(onlineRoom){let b=document.createElement('button');b.textContent=onlineReady?'UNREADY':'READY UP';b.onclick=()=>onlineSocket.emit('readyToggle');a.appendChild(b);
- if(onlineHost){let s=document.createElement('button');s.className='alt';s.textContent='START RUN';s.onclick=()=>onlineSocket.emit('hostStart');a.appendChild(s)}
- let c=document.createElement('div');c.className='onlineCode';c.textContent=onlineRoom;a.appendChild(c)}
-}
-function showLobby(v){om('onlineLobby').classList.toggle('hidden',!v)}
-om('nameBtn').onclick=()=>{let n=om('usernameInput').value.trim().slice(0,16)||'Player';localStorage.zsName=n;if(onlineSocket)onlineSocket.emit('setUsername',n);om('usernameInput').value=n;omsg('Name saved.')};
-om('usernameInput').value=localStorage.zsName||'';
-om('createBtn').onclick=()=>onlineSocket&&onlineSocket.emit('createRoom');
-om('joinBtn').onclick=()=>onlineSocket&&onlineSocket.emit('joinRoom',om('roomInput').value.trim().toUpperCase());
-if(onlineSocket){
- onlineSocket.on('connect',()=>{onlineId=onlineSocket.id;onlineSocket.emit('setUsername',localStorage.zsName||'Player');omsg('🟢 Connected. Create or join a lobby.')});
- onlineSocket.on('connect_error',()=>omsg('🔴 Multiplayer connection failed.'));
- onlineSocket.on('roomCreated',c=>{onlineRoom=c;onlineHost=true;omsg('Lobby created — share the code.')});
- onlineSocket.on('joinedRoom',c=>{onlineRoom=c;onlineHost=false;omsg('Joined lobby.')});
- onlineSocket.on('roomError',m=>omsg('⚠️ '+m));
- onlineSocket.on('lobbyState',d=>{onlineRoom=d.code;onlineHost=d.hostId===onlineId;onlineReady=!!d.players[onlineId]?.ready;lobbyRender(d.players)});
- onlineSocket.on('countdown',n=>{om('countdownOnline').textContent=n>0?n:'GO!';if(n<=0)setTimeout(()=>om('countdownOnline').textContent='',700)});
- onlineSocket.on('roundStart',d=>{showLobby(false);om('start').classList.add('hidden');running=true;paused=false;wave=d.wave||1;onlineSpectating=false;om('spectatorOverlay').classList.remove('specOn');});
- onlineSocket.on('remotePlayers',p=>onlineRemote=p||{});
- onlineSocket.on('authoritativeZombies',z=>onlineZombies=z||[]);
- onlineSocket.on('playerDown',id=>{if(id===onlineId){onlineSpectating=true;running=false;paused=true;om('spectatorOverlay').classList.add('specOn')}});
- onlineSocket.on('roundCleared',d=>{onlineSpectating=false;running=true;paused=true;om('spectatorOverlay').classList.remove('specOn');player.hp=player.maxHp;currentVoteId=d.voteId;rerolls=3;showTeamVote(d.cards,d.votes,d.endsAt)});
- onlineSocket.on('cardVoteState',d=>{currentVoteId=d.voteId;showTeamVote(d.cards,d.votes,d.endsAt);});
- onlineSocket.on('cardVoteResult',d=>{applyUpgrade(d.card);om('cards').classList.remove('show');om('rerollBtn').classList.remove('show');paused=false;running=true});
- onlineSocket.on('rerollState',d=>{rerolls=d.left;om('rerollBtn').textContent=`🔄 VOTE TO REROLL (${rerolls} LEFT)`;om('rerollBtn').classList.toggle('show',rerolls>0)});
- onlineSocket.on('gameOver',()=>{running=false;paused=true;om('gameover').style.display='grid';om('finalStats').textContent='Everyone in the lobby was defeated.'});
-}
-function showTeamVote(cards,votes,endsAt){
- paused=true;running=false;om('cards').classList.add('show');
- const els=[om('c1'),om('c2'),om('c3')];let picked=false;
- cards.forEach((u,i)=>{let e=els[i];e.className='card '+u.rarity;e.innerHTML=`<div class="rarity">${u.rarity}</div><div class="icon">${u.icon}</div><h2>${u.name}</h2><p>${u.desc}</p><small>TEAM VOTES: ${(votes||{})[i]||0}</small>`;e.onclick=()=>{if(picked)return;picked=true;onlineSocket.emit('cardVote',{voteId:currentVoteId,index:i})}});
- om('rerollBtn').textContent=`🔄 VOTE TO REROLL (${rerolls} LEFT)`;om('rerollBtn').classList.toggle('show',rerolls>0);
-}
-om('rerollBtn').onclick=()=>{if(rerolls>0)onlineSocket.emit('rerollVote',{voteId:currentVoteId})};
-
-// Send movement/customization input; the server moves the real player and controls zombie AI.
-setInterval(()=>{if(!onlineSocket||!onlineRoom||!onlineReady||onlineSpectating)return;
- const dx=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0),dy=(keys.s||keys.ArrowDown?1:0)-(keys.w||keys.ArrowUp?1:0);
- onlineSocket.emit('input',{dx,dy,aim:player.angle,shoot:!!keys[' ']||mouse.down,custom:window.customization||{},lowHp:player.hp<player.maxHp/2});
-},50);
-// Prevent Escape from interacting with the card vote.
-window.addEventListener('keydown',e=>{if(e.key==='Escape'&&om('cards').classList.contains('show')){e.preventDefault();e.stopImmediatePropagation()}},true);
-
-// Server zombie positions are rendered instead of creating an independent online zombie set.
-const oldDrawOnline=draw;
-draw=function(){oldDrawOnline();if(onlineRoom){for(const z of onlineZombies){ctx.save();ctx.fillStyle='#55b84a';ctx.beginPath();ctx.arc(z.x,z.y,16,0,Math.PI*2);ctx.fill();ctx.restore()}for(const p of Object.values(onlineRemote)){if(p.id===onlineId||!p.alive)continue;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle||0);ctx.fillStyle='#ff66cc';ctx.fillRect(-14,-12,28,24);ctx.fillStyle='#ddd';ctx.fillRect(7,-3,22,6);ctx.restore();ctx.fillStyle='#fff';ctx.font='11px Arial';ctx.textAlign='center';ctx.fillText(p.username,p.x,p.y-28);ctx.textAlign='left'}}};
 </script>
+<div id="spectator" class="modalHidden" style="position:absolute;inset:0;display:none;place-items:center;z-index:45;pointer-events:none"><div class="box"><h2>👻 SPECTATING</h2><div class="sub">Your rig is hidden. You will revive when your team clears the round.</div></div></div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+/* ONLINE LAYER FOR THE REAL GAME */
+const net=io();
+let netRoom='',netId='',netHost=false,netStarted=false,netReady=false,netVote=null,netRerolls=3;
+const ol=document.getElementById('onlineLobby'), nameIn=document.getElementById('onlineName');
+nameIn.value=localStorage.getItem('zsName')||'';
+const onlineMsg=t=>document.getElementById('onlineMsg').textContent=t;
+function lobbyRender(players){
+ const list=document.getElementById('onlineList'), vals=Object.values(players||{});
+ list.innerHTML=vals.length?vals.map(p=>`<div class="onlinePlayer"><span>${String(p.username||'Player').replace(/[&<>"']/g,'')}</span><span class="${p.ready?'onlineReady':'onlineWait'}">${p.ready?'READY':'NOT READY'}</span></div>`).join(''):'No players yet.';
+ const a=document.getElementById('onlineActions');a.innerHTML='';
+ if(netRoom){
+   const r=document.createElement('button');r.textContent=netReady?'UNREADY':'READY UP';r.onclick=()=>net.emit('readyToggle');a.appendChild(r);
+   if(netHost){const st=document.createElement('button');st.className='alt';st.textContent='START WHEN EVERYONE IS READY';st.onclick=()=>net.emit('hostStart');a.appendChild(st)}
+   document.getElementById('onlineCode').textContent='ROOM: '+netRoom;
+ }
+}
+net.on('connect',()=>{netId=net.id;onlineMsg('Connected.');net.emit('setUsername',localStorage.getItem('zsName')||'Player')});
+net.on('connect_error',()=>onlineMsg('Could not connect to the multiplayer server.'));
+net.on('roomCreated',c=>{netRoom=c;netHost=true;onlineMsg('Lobby created. Share the room code.');document.getElementById('onlineCode').textContent='ROOM: '+c});
+net.on('joinedRoom',c=>{netRoom=c;netHost=false;onlineMsg('Joined lobby.')});
+net.on('roomError',m=>onlineMsg('⚠️ '+m));
+net.on('lobbyState',d=>{netRoom=d.code||netRoom;netHost=d.hostId===netId;netReady=!!d.players?.[netId]?.ready;lobbyRender(d.players)});
+net.on('countdown',n=>{document.getElementById('onlineCountdown').textContent=n>0?n:'GO!'});
+net.on('roundStart',d=>{
+ netStarted=true;ol.classList.add('hidden');document.getElementById('start').classList.add('hidden');
+ running=true;paused=false;wave=d.wave||1;waveCleared=false;spawnWave();
+});
+net.on('playerDown',id=>{if(id===netId){running=false;paused=true;player.hp=0;document.getElementById('spectator').classList.add('show')}});
+net.on('gameOver',()=>{running=false;paused=true;document.getElementById('gameover').style.display='grid';document.getElementById('finalStats').textContent='Your whole lobby was defeated.'});
+net.on('roundCleared',d=>{
+ running=false;paused=true;document.getElementById('cards').classList.add('show');netVote={id:d.voteId,cards:d.cards,votes:{}};netRerolls=3;document.getElementById('teamReroll').classList.add('show');showTeamCards();
+});
+net.on('cardVoteState',d=>{netVote=d;showTeamCards()});
+net.on('rerollState',d=>{netRerolls=d.left;const b=document.getElementById('teamReroll');b.textContent='🔄 VOTE TO REROLL ('+netRerolls+' LEFT)';b.classList.toggle('show',netRerolls>0)});
+net.on('cardVoteResult',d=>{
+ applyUpgrade(d.card);document.getElementById('cards').classList.remove('show');document.getElementById('teamReroll').classList.remove('show');
+ netVote=null;paused=false;running=true;wave++;waveCleared=false;
+ // IMPORTANT: the next wave is spawned only after the winning card arrives.
+ spawnWave();
+});
+function showTeamCards(){
+ if(!netVote)return;
+ const ids=['c1','c2','c3'];
+ netVote.cards.forEach((u,i)=>{
+  const el=document.getElementById(ids[i]);el.className='card '+u.rarity;
+  el.innerHTML=`<div class="rarity">${u.rarity}</div><div class="icon">${u.icon}</div><h2>${u.name}</h2><p>${u.desc}</p><small>TEAM VOTES: ${(netVote.votes||{})[i]||0}</small>`;
+  el.onclick=()=>net.emit('cardVote',{voteId:netVote.id,index:i});
+ });
+}
+document.getElementById('onlineNameBtn').onclick=()=>{let n=(nameIn.value||'Player').trim().slice(0,16)||'Player';localStorage.setItem('zsName',n);net.emit('setUsername',n);onlineMsg('Username set to '+n)};
+document.getElementById('onlineCreate').onclick=()=>net.emit('createRoom');
+document.getElementById('onlineJoin').onclick=()=>net.emit('joinRoom',(document.getElementById('onlineCodeInput').value||'').trim().toUpperCase());
+document.getElementById('teamReroll').onclick=()=>{if(netVote&&netRerolls>0)net.emit('rerollVote',{voteId:netVote.id})};
 
+// All players' customization values are sent to the server so each player's rig remains their own.
+setInterval(()=>{
+ if(!net||!netRoom||!netStarted||typeof player==='undefined')return;
+ net.emit('input',{dx:((keys.d||keys.arrowright)?1:0)-((keys.a||keys.arrowleft)?1:0),dy:((keys.s||keys.arrowdown)?1:0)-((keys.w||keys.arrowup)?1:0),aim:player.aimAngle||player.angle||0,shoot:!!mouse.down,custom:colorParts});
+},50);
+
+// Do not allow Escape to close/skip team voting.
+addEventListener('keydown',e=>{
+ if(e.key==='Escape' && document.getElementById('cards').classList.contains('show')){e.preventDefault();e.stopImmediatePropagation();}
+},true);
+
+// Dead players cannot move until the server reports the team cleared the round.
+const originalUpdate=update;
+update=function(dt){
+ if(netStarted && net && netId && window.__netDead){player.x=player.x;player.y=player.y;return;}
+ originalUpdate(dt);
+};
+net.on('playerDown',id=>{if(id===netId){window.__netDead=true}});
+net.on('roundCleared',()=>{window.__netDead=false;player.hp=player.maxHp;document.getElementById('spectator').classList.remove('show')});
+</script>
 </body>
 </html>
