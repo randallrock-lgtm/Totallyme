@@ -56,6 +56,7 @@ h1{margin:0 0 8px;font-size:48px}.sub{color:#a9b4c4}.buttons{display:flex;gap:10
    <input id="onlineName" maxlength="16" placeholder="Username">
    <button id="onlineNameBtn">SET USERNAME</button>
   </div>
+  <div class="buttons"><button id="onlineCustomize" class="alt">🎨 CUSTOMIZE CHARACTER</button></div>
   <div class="onlineGrid">
    <button id="onlineCreate">CREATE LOBBY</button>
    <input id="onlineCodeInput" maxlength="8" placeholder="ROOM CODE">
@@ -551,7 +552,7 @@ function spawnZombie(){
  const pool=typePool();const t=pool[Math.floor(Math.random()*pool.length)];
  zombies.push(makeZ(t,1+Math.max(0,wave-1)*.085));
 }
-function spawnWave(){
+function spawnWave(){ if(typeof netVoting!=='undefined' && netVoting) return;
  zombies=[];bullets=[];enemyBullets=[];effects=[];
  const count=6+Math.floor(wave*3.7);
  for(let i=0;i<count;i++)spawnZombie();
@@ -1409,7 +1410,7 @@ function makeCard(){
 function chooseCards(){
  paused=true;waveCleared=false;const box=document.getElementById('cards');box.classList.add('show');
  const chosen=[];while(chosen.length<3){const c=makeCard();if(!chosen.some(x=>x.name===c.name))chosen.push(c)}
- chosen.forEach((u,i)=>{const el=document.getElementById('c'+(i+1));el.className='card '+u.rarity;el.innerHTML=`<div class="rarity">${u.rarity}</div><div class="icon">${u.icon}</div><h2>${u.name}</h2><p>${u.desc}</p><small>CHOOSE THIS UPGRADE</small>`;el.onclick=()=>{applyUpgrade(u);box.classList.remove('show');paused=false;wave++;spawnWave()}})
+ chosen.forEach((u,i)=>{const el=document.getElementById('c'+(i+1));el.className='card '+u.rarity;el.innerHTML=`<div class="rarity">${u.rarity}</div><div class="icon">${u.icon}</div><h2>${u.name}</h2><p>${u.desc}</p><small>CHOOSE THIS UPGRADE</small>`;el.onclick=()=>{if(typeof net!=='undefined'&&netRoom){if(netVote)net.emit('cardVote',{voteId:netVote.id,index:i});return;}applyUpgrade(u);box.classList.remove('show');paused=false;wave++;spawnWave()}})
 }
 
 const megaUpgradeEffects={'mega0':p=>{p.damage*=1+18/100},'mega1':p=>{p.reload*=Math.max(.45,1-12/100)},'mega2':p=>{p.speedMult*=1+15/100},'mega3':p=>{p.crit+= 7/100},'mega4':p=>{p.maxHp+=25;p.hp=clamp(p.hp+25,0,p.maxHp)},'mega5':p=>{p.bulletSpeed*=1+20/100},'mega6':p=>{p.bulletSize*=1+25/100},'mega7':p=>{p.pierce+=2},'mega8':p=>{p.shots+=1},'mega9':p=>{p.lifeSteal+= 5/100},'mega10':p=>{p.shieldMax+=30;p.shield=p.shieldMax},'mega11':p=>{p.enemySlow+= 10/100},'mega12':p=>{p.knockback+=18},'mega13':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega14':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+20/10},'mega15':p=>{p.dashChance+= 5/100},'mega16':p=>{p.regen+= 1},'mega17':p=>{p.boss=(p.boss||0)+55/100},'mega18':p=>{p.fastbuster=(p.fastbuster||0)+35/100},'mega19':p=>{p.tankbuster=(p.tankbuster||0)+35/100},'mega20':p=>{p.close=(p.close||0)+30/100},'mega21':p=>{p.far=(p.far||0)+25/100},'mega22':p=>{p.waveRunner=(p.waveRunner||0)+15/100},'mega23':p=>{p.comboPower=(p.comboPower||0)+12/100},'mega24':p=>{p.orbital=(p.orbital||0)+1},'mega25':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega26':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega27':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega28':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+20/100},'mega29':p=>{p.explosive=(p.explosive||0)+18/100},'mega30':p=>{p.damageTaken*=Math.max(.5,1-10/100)},'mega31':p=>{p.magnet+=(p.magnet||0)+35},'mega32':p=>{p.hp=clamp(p.hp+60,0,p.maxHp)},'mega33':p=>{p.critMult+=(p.critMult||2)*12/100},'mega34':p=>{p.fireRate+=(p.fireRate||0)+30/100},'mega35':p=>{p.extraLife++},'mega36':p=>{p.luck++},'mega37':p=>{p.thorns=(p.thorns||0)+1/10},'mega38':p=>{p.thorns=(p.thorns||0)+4/10},'mega39':p=>{p.healOnKill=(p.healOnKill||0)+5},'mega40':p=>{p.bulletLife*=1+18/100},'mega41':p=>{p.damage*=1+12/100},'mega42':p=>{p.reload*=Math.max(.45,1-15/100)},'mega43':p=>{p.speedMult*=1+7/100},'mega44':p=>{p.crit+= 25/100},'mega45':p=>{p.maxHp+=20;p.hp=clamp(p.hp+20,0,p.maxHp)},'mega46':p=>{p.bulletSpeed*=1+25/100},'mega47':p=>{p.bulletSize*=1+12/100},'mega48':p=>{p.pierce+=1},'mega49':p=>{p.shots+=1},'mega50':p=>{p.lifeSteal+= 30/100},'mega51':p=>{p.shieldMax+=10;p.shield=p.shieldMax},'mega52':p=>{p.enemySlow+= 18/100},'mega53':p=>{p.knockback+=20},'mega54':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega55':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+20/10},'mega56':p=>{p.dashChance+= 0/100},'mega57':p=>{p.regen+= 5},'mega58':p=>{p.boss=(p.boss||0)+35/100},'mega59':p=>{p.fastbuster=(p.fastbuster||0)+35/100},'mega60':p=>{p.tankbuster=(p.tankbuster||0)+30/100},'mega61':p=>{p.close=(p.close||0)+25/100},'mega62':p=>{p.far=(p.far||0)+15/100},'mega63':p=>{p.waveRunner=(p.waveRunner||0)+12/100},'mega64':p=>{p.comboPower=(p.comboPower||0)+15/100},'mega65':p=>{p.orbital=(p.orbital||0)+1},'mega66':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega67':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega68':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega69':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+18/100},'mega70':p=>{p.explosive=(p.explosive||0)+10/100},'mega71':p=>{p.damageTaken*=Math.max(.5,1-35/100)},'mega72':p=>{p.magnet+=(p.magnet||0)+60},'mega73':p=>{p.hp=clamp(p.hp+12,0,p.maxHp)},'mega74':p=>{p.critMult+=(p.critMult||2)*30/100},'mega75':p=>{p.fireRate+=(p.fireRate||0)+20/100},'mega76':p=>{p.extraLife++},'mega77':p=>{p.luck++},'mega78':p=>{p.thorns=(p.thorns||0)+4/10},'mega79':p=>{p.thorns=(p.thorns||0)+20/10},'mega80':p=>{p.healOnKill=(p.healOnKill||0)+4},'mega81':p=>{p.bulletLife*=1+12/100},'mega82':p=>{p.damage*=1+15/100},'mega83':p=>{p.reload*=Math.max(.45,1-7/100)},'mega84':p=>{p.speedMult*=1+25/100},'mega85':p=>{p.crit+= 20/100},'mega86':p=>{p.maxHp+=25;p.hp=clamp(p.hp+25,0,p.maxHp)},'mega87':p=>{p.bulletSpeed*=1+12/100},'mega88':p=>{p.bulletSize*=1+10/100},'mega89':p=>{p.pierce+=1},'mega90':p=>{p.shots+=2},'mega91':p=>{p.lifeSteal+= 10/100},'mega92':p=>{p.shieldMax+=18;p.shield=p.shieldMax},'mega93':p=>{p.enemySlow+= 20/100},'mega94':p=>{p.knockback+=20},'mega95':p=>{p.burn=1;p.firePulse=(p.firePulse||0)+1},'mega96':p=>{p.pulse=true;p.pulsePower=(p.pulsePower||0)+2/10},'mega97':p=>{p.dashChance+= 13/100},'mega98':p=>{p.regen+= 3},'mega99':p=>{p.boss=(p.boss||0)+35/100},'mega100':p=>{p.fastbuster=(p.fastbuster||0)+30/100},'mega101':p=>{p.tankbuster=(p.tankbuster||0)+25/100},'mega102':p=>{p.close=(p.close||0)+15/100},'mega103':p=>{p.far=(p.far||0)+12/100},'mega104':p=>{p.waveRunner=(p.waveRunner||0)+15/100},'mega105':p=>{p.comboPower=(p.comboPower||0)+22/100},'mega106':p=>{p.orbital=(p.orbital||0)+1},'mega107':p=>{p.meteor=true;p.meteorFast=(p.meteorFast||0)+1},'mega108':p=>{p.lightning=(p.lightning||0)+1;p.lightningFast=(p.lightningFast||0)+1},'mega109':p=>{p.nova=true;p.novaFast=(p.novaFast||0)+1},'mega110':p=>{p.homing=true;p.homingStrength=(p.homingStrength||0)+10/100},'mega111':p=>{p.explosive=(p.explosive||0)+35/100},'mega112':p=>{p.damageTaken*=Math.max(.5,1-60/100)},'mega113':p=>{p.magnet+=(p.magnet||0)+12},'mega114':p=>{p.hp=clamp(p.hp+30,0,p.maxHp)},'mega115':p=>{p.critMult+=(p.critMult||2)*20/100},'mega116':p=>{p.fireRate+=(p.fireRate||0)+1/100},'mega117':p=>{p.extraLife++},'mega118':p=>{p.luck++},'mega119':p=>{p.thorns=(p.thorns||0)+20/10}};
@@ -1451,6 +1452,7 @@ const colorParts={
  legL:{label:'Left Leg',h:0,s:100,b:100},
  legR:{label:'Right Leg',h:0,s:100,b:100}
 };
+try{Object.assign(colorParts,JSON.parse(localStorage.getItem('zsColors')||'{}'))}catch(e){}
 function partFilter(key){const c=colorParts[key];return `hue-rotate(${c.h}deg) saturate(${c.s}%) brightness(${c.b}%)`;}
 function drawCustomizationPreview(){
  const pc=document.getElementById('customPreview'); if(!pc)return;
@@ -1483,7 +1485,7 @@ function buildCustomizer(){
   <label class="rangeRow"><span>BRIGHTNESS</span><input data-k="${key}" data-p="b" type="range" min="40" max="180" value="${c.b}"><span id="v-${key}-b">${c.b}%</span></label>`;
   root.appendChild(el);
  }
- root.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{const k=inp.dataset.k,p=inp.dataset.p; colorParts[k][p]=+inp.value;document.getElementById(`v-${k}-${p}`).textContent=p==='h'?inp.value+'°':inp.value+'%';updateSwatch(k);drawCustomizationPreview()}));
+ root.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{localStorage.setItem('zsColors',JSON.stringify(colorParts));const k=inp.dataset.k,p=inp.dataset.p; colorParts[k][p]=+inp.value;document.getElementById(`v-${k}-${p}`).textContent=p==='h'?inp.value+'°':inp.value+'%';updateSwatch(k);drawCustomizationPreview()}));
  Object.keys(colorParts).forEach(updateSwatch);
 }
 function updateSwatch(k){const s=document.getElementById('sw-'+k);if(!s)return;const c=colorParts[k];s.style.background=`hsl(${(c.h+360)%360} ${Math.min(100,c.s)}% ${Math.min(100,c.b/2)}%)`;s.style.filter=partFilter(k);}
@@ -1512,7 +1514,6 @@ document.querySelectorAll('.card').forEach(card=>{
 document.getElementById('customizeBtn').onclick=()=>document.getElementById('customize').classList.remove('modalHidden');
 document.getElementById('closeCustomize').onclick=()=>document.getElementById('customize').classList.add('modalHidden');
 document.getElementById('resetColors').onclick=resetColors;
-document.getElementById('startBtn').onclick=()=>{document.getElementById('start').classList.add('hidden');running=true;wave=1;waveCleared=false;discoveredZombies.clear();zombieNoticeQueue.length=0;zombieNoticeBusy=false;document.getElementById('newZombie').classList.remove('show');spawnWave()};
 document.getElementById('codexBtn').onclick=()=>document.getElementById('codex').style.display='grid';
 document.getElementById('closeCodex').onclick=()=>document.getElementById('codex').style.display='none';
 document.getElementById('restart').onclick=()=>location.reload();
@@ -1524,7 +1525,7 @@ updateHud();requestAnimationFrame(loop);
 <script>
 /* ONLINE LAYER FOR THE REAL GAME */
 const net=io();
-let netRoom='',netId='',netHost=false,netStarted=false,netReady=false,netVote=null,netRerolls=3;
+let netRoom='',netId='',netHost=false,netStarted=false,netReady=false,netVote=null,netRerolls=3,netVoting=false;
 const ol=document.getElementById('onlineLobby'), nameIn=document.getElementById('onlineName');
 nameIn.value=localStorage.getItem('zsName')||'';
 const onlineMsg=t=>document.getElementById('onlineMsg').textContent=t;
@@ -1552,7 +1553,7 @@ net.on('roundStart',d=>{
 net.on('playerDown',id=>{if(id===netId){running=false;paused=true;player.hp=0;document.getElementById('spectator').classList.add('show')}});
 net.on('gameOver',()=>{running=false;paused=true;document.getElementById('gameover').style.display='grid';document.getElementById('finalStats').textContent='Your whole lobby was defeated.'});
 net.on('roundCleared',d=>{
- running=false;paused=true;document.getElementById('cards').classList.add('show');netVote={id:d.voteId,cards:d.cards,votes:{}};netRerolls=3;document.getElementById('teamReroll').classList.add('show');showTeamCards();
+ running=false;paused=true;document.getElementById('cards').classList.add('show');netVoting=true;netVote={id:d.voteId,cards:d.cards,votes:{}};netRerolls=3;document.getElementById('teamReroll').classList.add('show');showTeamCards();
 });
 net.on('cardVoteState',d=>{netVote=d;showTeamCards()});
 net.on('rerollState',d=>{netRerolls=d.left;const b=document.getElementById('teamReroll');b.textContent='🔄 VOTE TO REROLL ('+netRerolls+' LEFT)';b.classList.toggle('show',netRerolls>0)});
@@ -1574,6 +1575,7 @@ function showTeamCards(){
 document.getElementById('onlineNameBtn').onclick=()=>{let n=(nameIn.value||'Player').trim().slice(0,16)||'Player';localStorage.setItem('zsName',n);net.emit('setUsername',n);onlineMsg('Username set to '+n)};
 document.getElementById('onlineCreate').onclick=()=>net.emit('createRoom');
 document.getElementById('onlineJoin').onclick=()=>net.emit('joinRoom',(document.getElementById('onlineCodeInput').value||'').trim().toUpperCase());
+document.getElementById('onlineCustomize').onclick=()=>document.getElementById('customize').classList.remove('modalHidden');
 document.getElementById('teamReroll').onclick=()=>{if(netVote&&netRerolls>0)net.emit('rerollVote',{voteId:netVote.id})};
 
 // All players' customization values are sent to the server so each player's rig remains their own.
