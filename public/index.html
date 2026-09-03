@@ -1575,7 +1575,13 @@ function showTeamCards(){
 document.getElementById('onlineNameBtn').onclick=()=>{let n=(nameIn.value||'Player').trim().slice(0,16)||'Player';localStorage.setItem('zsName',n);net.emit('setUsername',n);onlineMsg('Username set to '+n)};
 document.getElementById('onlineCreate').onclick=()=>net.emit('createRoom');
 document.getElementById('onlineJoin').onclick=()=>net.emit('joinRoom',(document.getElementById('onlineCodeInput').value||'').trim().toUpperCase());
-document.getElementById('onlineCustomize').onclick=()=>document.getElementById('customize').classList.remove('modalHidden');
+document.getElementById('onlineCustomize').onclick=()=>{
+ const ids=['customize','customizer','customizeModal']; const el=ids.map(id=>document.getElementById(id)).find(Boolean);
+ if(el){el.classList.remove('hidden','modalHidden');el.style.display='grid';return;}
+ if(typeof openCustomize==='function'){openCustomize();return;}
+ if(typeof showCustomize==='function'){showCustomize();return;}
+ onlineMsg('Customization panel could not be opened.');
+};
 document.getElementById('teamReroll').onclick=()=>{if(netVote&&netRerolls>0)net.emit('rerollVote',{voteId:netVote.id})};
 
 // All players' customization values are sent to the server so each player's rig remains their own.
@@ -1598,5 +1604,7 @@ update=function(dt){
 net.on('playerDown',id=>{if(id===netId){window.__netDead=true}});
 net.on('roundCleared',()=>{window.__netDead=false;player.hp=player.maxHp;document.getElementById('spectator').classList.remove('show')});
 </script>
-</body>
+<script>
+(function(){const K='zsurvivor_customization_v2';function load(){try{const x=JSON.parse(localStorage.getItem(K)||'null');if(x&&typeof colorParts==='object')Object.assign(colorParts,x);}catch(e){}}function save(){try{localStorage.setItem(K,JSON.stringify(colorParts));}catch(e){}}window.addEventListener('load',load);document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#customize,#customizer,#customizeModal'))save()});document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('#customize,#customizer,#customizeModal'))save()});window.addEventListener('beforeunload',save)})();
+</script></body>
 </html>
