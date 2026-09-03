@@ -1,2 +1,1 @@
-[README.md](https://github.com/user-attachments/files/31789615/README.md)
-Online co-op build with lobby readiness, server-authoritative zombie nearest-player AI, team card voting, 3 reroll votes, spectating, revival and usernames.
+[README.md](https://github.com/user-attachments/files/31791126/README.md)[UReal Zombie Survivor game + online lobby. Deploy with npm install and npm start.ploading README.md…]()
